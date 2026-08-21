@@ -87,7 +87,7 @@ function Panel({
   title: string;
   subtitle: string;
   children: React.ReactNode;
-  onRefresh?: () => void;
+  onRefresh?: (() => void) | undefined;
 }) {
   return (
     <section className="panel flex min-h-72 flex-col">
