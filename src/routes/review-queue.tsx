@@ -9,7 +9,7 @@ import {
   GUIDE_STATUS_LABELS,
   GUIDE_STATUS_ORDER,
   GUIDE_TYPE_LABELS,
-  type Guide,
+  type GuideWithVersion,
 } from "@/domain/types";
 import { formatDate, relativeDays } from "@/lib/format";
 import { guideQueries } from "@/lib/queries";
@@ -93,7 +93,7 @@ function QueueSection({
 }: {
   title: string;
   description: string;
-  query: UseQueryResult<Guide[], Error>;
+  query: UseQueryResult<GuideWithVersion[], Error>;
 }) {
   const guides = query.data ?? [];
 

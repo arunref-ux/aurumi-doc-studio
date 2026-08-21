@@ -20,7 +20,7 @@ import {
   GUIDE_STATUS_LABELS,
   GUIDE_STATUS_ORDER,
   GUIDE_TYPE_LABELS,
-  type Guide,
+  type GuideWithVersion,
   type GuideQuery,
   type GuideStatus,
   type GuideType,

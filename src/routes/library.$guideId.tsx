@@ -10,8 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   GUIDE_TYPE_LABELS,
   type AssociationKind,
-  type Guide,
   type GuideAssociation,
+  type GuideWithVersion,
 } from "@/domain/types";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { devHarmonyQueries, guideQueries } from "@/lib/queries";
@@ -88,7 +88,7 @@ function GuideDetailPage() {
             <p className="mt-1 font-mono text-xs text-muted-foreground">/{data.slug}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={data.status} />
+            <StatusBadge status={data.currentVersion.status} />
             <ActionButton action="guide.action.edit" icon={<Pencil className="size-3.5" />} />
             <ActionButton action="guide.action.submit_for_review" />
             <ActionButton action="guide.action.approve" />
@@ -100,11 +100,11 @@ function GuideDetailPage() {
         </div>
 
         <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-4 text-sm md:grid-cols-5">
-          <Meta label="Current version" value={data.currentVersion} mono />
+          <Meta label="Current version" value={`v${data.currentVersion.versionNumber}`} mono />
           <Meta label="Owner" value={data.owner} />
           <Meta label="Last updated" value={formatDate(data.updatedAt)} />
           <Meta label="Created" value={formatDate(data.createdAt)} />
-          <Meta label="Published" value={formatDate(data.publishedAt)} />
+          <Meta label="Published" value={formatDate(data.currentVersion.publishedAt)} />
         </dl>
       </header>
 
@@ -148,7 +148,7 @@ function GuideDetailPage() {
             <div className="space-y-3 px-4 py-3 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Guide version</span>
-                <span className="font-mono">{data.currentVersion}</span>
+                <span className="font-mono">v{data.currentVersion.versionNumber}</span>
               </div>
               {featureAssocs.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
