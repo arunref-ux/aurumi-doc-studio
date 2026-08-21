@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { guideCommands } from "@/commands/guide-commands";
 import { useGuideCommand } from "@/commands/useGuideCommand";
 import { REFERENCE_KIND_LABELS, refKey } from "@/domain/external-ref";
+import { useDirtyNavigationGuard } from "@/hooks/useDirtyNavigationGuard";
 import { INITIAL_VERSION_NUMBER } from "@/domain/guide-editing";
 import {
   GUIDE_TYPE_LABELS,
@@ -35,10 +36,13 @@ import {
 /**
  * Guide authoring workspace (Build 2A.1).
  *
- * Editable surface: Title, Summary, Guide type and Associations. Every write
- * leaves through the command bus, which authorizes the action centrally before
- * the Guide Studio provider is reached. Version number and workflow status are
- * system-controlled and displayed read-only.
+ * Editable surface when editing a draft: Title, Summary and Associations only.
+ * Guide type is chosen once at creation and is read-only afterwards — the
+ * update command/provider contract does not accept it at all.
+ *
+ * Every write leaves through the command bus, which authorizes the action
+ * centrally before the Guide Studio provider is reached. Version number and
+ * workflow status are system-controlled and displayed read-only.
  */
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -79,9 +83,7 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
   const { user } = useAuthorization();
 
   const createGuide = useGuideCommand(guideCommands.createGuide);
-  const updateGuide = useGuideCommand(guideCommands.updateGuide);
-  const addAssociation = useGuideCommand(guideCommands.addAssociation);
-  const removeAssociation = useGuideCommand(guideCommands.removeAssociation);
+  const updateGuideDraft = useGuideCommand(guideCommands.updateGuideDraft);
 
   const baseline = useMemo<Draft>(() => (guide ? draftFromGuide(guide) : EMPTY_DRAFT), [guide]);
   const [draft, setDraft] = useState<Draft>(baseline);
@@ -93,27 +95,26 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
   }, [baseline]);
 
   const dirty = useMemo(
-    () => JSON.stringify(draft) !== JSON.stringify(baseline),
-    [draft, baseline],
+    () =>
+      saveState !== "saving" &&
+      saveState !== "saved" &&
+      JSON.stringify(draft) !== JSON.stringify(baseline),
+    [draft, baseline, saveState],
   );
 
-  // Do not lose unsaved work silently on reload / tab close.
-  useEffect(() => {
-    if (!dirty) return;
-    const handler = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [dirty]);
+  /**
+   * One guard for every exit path: router navigation (sidebar, Guide Library,
+   * another guide, any internal route change, browser back/forward) plus
+   * browser/tab unload. The workspace Back control routes through the same
+   * mechanism because it is an ordinary navigation.
+   */
+  const guard = useDirtyNavigationGuard(dirty);
 
   const leave = useCallback(() => {
-    if (dirty && !window.confirm("You have unsaved changes. Leave without saving?")) return;
     void navigate(
       guide ? { to: "/library/$guideId", params: { guideId: guide.id } } : { to: "/library" },
     );
-  }, [dirty, guide, navigate]);
+  }, [guide, navigate]);
 
   const existingKeys = draft.associations.map((association) => refKey(association.ref));
 
@@ -157,38 +158,20 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
         return;
       }
 
-      await updateGuide({
+      // One logical mutation: metadata + the complete association set are
+      // validated together and committed atomically by the provider. No
+      // per-association calls, so no partially applied edit is possible and no
+      // UI-level rollback is needed. guideType is not part of this payload.
+      await updateGuideDraft({
         guideId: guide.id,
         title: draft.title,
         summary: draft.summary,
-        guideType: draft.guideType,
         actor,
+        associations: draft.associations,
       });
-
-      const baselineKeys = baseline.associations.map((association) => refKey(association.ref));
-      const draftKeys = draft.associations.map((association) => refKey(association.ref));
-
-      for (const association of baseline.associations) {
-        if (!draftKeys.includes(refKey(association.ref))) {
-          await removeAssociation({ guideId: guide.id, ref: association.ref });
-        }
-      }
-      for (const association of draft.associations) {
-        if (!baselineKeys.includes(refKey(association.ref))) {
-          await addAssociation({
-            guideId: guide.id,
-            ref: association.ref,
-            label: association.label,
-            ...(association.parentExternalId
-              ? { parentExternalId: association.parentExternalId }
-              : {}),
-          });
-        }
-      }
 
       await queryClient.invalidateQueries();
       setSaveState("saved");
-      await navigate({ to: "/library/edit/$guideId", params: { guideId: guide.id } });
     } catch (caught) {
       setSaveState("error");
       setError(caught instanceof Error ? caught.message : "Unable to save this guide.");
@@ -199,8 +182,11 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
 
   return (
     <div className="space-y-5">
+      {/* Single confirmation surface for every blocked navigation. */}
+      <guard.Dialog />
+
       <button
-        onClick={leave}
+        onClick={() => guard.confirmNavigation(leave)}
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-3.5" /> {guide ? "Back to Guide" : "Back to Guide Library"}
@@ -279,26 +265,42 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
                 />
               </div>
 
+              {/*
+                Guide type is selected once at creation. In edit mode it is
+                read-only: the update command and provider contract do not
+                accept guideType at all in Build 2A.1.
+              */}
               <div className="space-y-1.5">
                 <Label>Guide type</Label>
-                <Select
-                  value={draft.guideType}
-                  onValueChange={(value) => {
-                    setSaveState("idle");
-                    setDraft({ ...draft, guideType: value as GuideType });
-                  }}
-                >
-                  <SelectTrigger className="h-9 w-64">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(GUIDE_TYPE_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {guide ? (
+                  <p className="flex h-9 w-64 items-center rounded-md border border-dashed border-border bg-muted/40 px-3 text-sm">
+                    {GUIDE_TYPE_LABELS[guide.guideType]}
+                  </p>
+                ) : (
+                  <Select
+                    value={draft.guideType}
+                    onValueChange={(value) => {
+                      setSaveState("idle");
+                      setDraft({ ...draft, guideType: value as GuideType });
+                    }}
+                  >
+                    <SelectTrigger className="h-9 w-64">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(GUIDE_TYPE_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {guide ? (
+                  <p className="text-xs text-muted-foreground">
+                    Guide type is not editable in this build.
+                  </p>
+                ) : null}
               </div>
             </section>
 

@@ -24,12 +24,17 @@ export interface CreateGuideCommandInput {
   associations?: AssociationDraftInput[];
 }
 
-export interface UpdateGuideCommandInput {
+/**
+ * Build 2A.1 editable contract: title, summary and the complete association
+ * set. `guideType` is deliberately NOT accepted — it cannot be changed through
+ * the guide update path in this build.
+ */
+export interface UpdateGuideDraftCommandInput {
   guideId: string;
   title: string;
   summary: string;
-  guideType: GuideType;
   actor: string;
+  associations: AssociationDraftInput[];
 }
 
 export interface AddGuideAssociationInput {
@@ -54,11 +59,14 @@ export const createGuideCommand = defineCommand<CreateGuideCommandInput, GuideWi
   (input) => providers.guideStudio.createGuide(input),
 );
 
-/** Build 2A.1: Draft metadata update. Requires guide.edit. */
-export const updateGuideCommand = defineCommand<UpdateGuideCommandInput, GuideWithVersion>(
-  "guide.action.edit",
-  (input) => providers.guideStudio.updateGuide(input),
-);
+/**
+ * Build 2A.1: the single logical draft update (metadata + associations).
+ * Requires guide.edit; the provider validates the whole edit before committing.
+ */
+export const updateGuideDraftCommand = defineCommand<
+  UpdateGuideDraftCommandInput,
+  GuideWithVersion
+>("guide.action.edit", (input) => providers.guideStudio.updateGuideDraft(input));
 
 /**
  * Authorization is checked in the bus, then the provider validates
@@ -77,7 +85,7 @@ export const removeGuideAssociationCommand = defineCommand<RemoveGuideAssociatio
 /** Later-build lifecycle mutations — authorization policy already centralized. */
 export const guideCommands = {
   createGuide: createGuideCommand,
-  updateGuide: updateGuideCommand,
+  updateGuideDraft: updateGuideDraftCommand,
   addAssociation: addGuideAssociationCommand,
   removeAssociation: removeGuideAssociationCommand,
   submitForReview: definePlannedCommand<{ guideId: string }>("guide.action.submit_for_review"),
