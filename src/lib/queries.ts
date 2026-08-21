@@ -1,6 +1,10 @@
 import { queryOptions } from "@tanstack/react-query";
 import type { GuideQuery } from "@/domain/types";
 import { providers } from "@/providers";
+import { createCoverageService } from "@/services/coverage.service";
+
+/** Composition boundary: coverage joins external providers + Guide Studio. */
+const coverageService = createCoverageService(providers);
 
 const retry = 1;
 
@@ -81,16 +85,28 @@ export const guideQueries = {
       queryFn: () => providers.guideStudio.getRecentActivity(limit),
       retry,
     }),
-  coverage: () =>
+  versions: (guideId: string) =>
     queryOptions({
-      queryKey: ["guides", "coverage"],
-      queryFn: () => providers.guideStudio.getCoverageSummary(),
+      queryKey: ["guides", "versions", guideId],
+      queryFn: () => providers.guideStudio.getGuideVersions(guideId),
       retry,
     }),
-  coveredIds: () =>
+};
+
+/** Coverage fans out across every provider, so it tolerates more retries. */
+const composedRetry = 3;
+
+export const coverageQueries = {
+  summary: () =>
     queryOptions({
-      queryKey: ["guides", "covered-ids"],
-      queryFn: () => providers.guideStudio.getCoveredExternalIds(),
-      retry,
+      queryKey: ["coverage", "summary"],
+      queryFn: () => coverageService.getCoverageSummary(),
+      retry: composedRetry,
+    }),
+  stateIndex: () =>
+    queryOptions({
+      queryKey: ["coverage", "state-index"],
+      queryFn: () => coverageService.getCoverageStateIndex(),
+      retry: composedRetry,
     }),
 };

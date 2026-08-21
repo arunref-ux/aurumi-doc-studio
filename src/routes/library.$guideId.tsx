@@ -10,8 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   GUIDE_TYPE_LABELS,
   type AssociationKind,
-  type Guide,
   type GuideAssociation,
+  type GuideWithVersion,
 } from "@/domain/types";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { devHarmonyQueries, guideQueries } from "@/lib/queries";
@@ -68,8 +68,8 @@ function GuideDetailPage() {
   }
 
   const data = guide.data;
-  const featureAssocs = data.associations.filter((assoc) => assoc.kind === "feature");
-  const relatedGuides = data.associations.filter((assoc) => assoc.kind === "related-guide");
+  const featureAssocs = data.associations.filter((assoc) => assoc.ref.kind === "feature");
+  const relatedGuides = data.associations.filter((assoc) => assoc.ref.kind === "related-guide");
 
   return (
     <div className="space-y-5">
@@ -88,7 +88,7 @@ function GuideDetailPage() {
             <p className="mt-1 font-mono text-xs text-muted-foreground">/{data.slug}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={data.status} />
+            <StatusBadge status={data.currentVersion.status} />
             <ActionButton action="guide.action.edit" icon={<Pencil className="size-3.5" />} />
             <ActionButton action="guide.action.submit_for_review" />
             <ActionButton action="guide.action.approve" />
@@ -100,11 +100,11 @@ function GuideDetailPage() {
         </div>
 
         <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-4 text-sm md:grid-cols-5">
-          <Meta label="Current version" value={data.currentVersion} mono />
+          <Meta label="Current version" value={`v${data.currentVersion.versionNumber}`} mono />
           <Meta label="Owner" value={data.owner} />
           <Meta label="Last updated" value={formatDate(data.updatedAt)} />
           <Meta label="Created" value={formatDate(data.createdAt)} />
-          <Meta label="Published" value={formatDate(data.publishedAt)} />
+          <Meta label="Published" value={formatDate(data.currentVersion.publishedAt)} />
         </dl>
       </header>
 
@@ -148,7 +148,7 @@ function GuideDetailPage() {
             <div className="space-y-3 px-4 py-3 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Guide version</span>
-                <span className="font-mono">{data.currentVersion}</span>
+                <span className="font-mono">v{data.currentVersion.versionNumber}</span>
               </div>
               {featureAssocs.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
@@ -158,13 +158,15 @@ function GuideDetailPage() {
                 featureAssocs.map((assoc) => (
                   <FeatureVersions
                     key={assoc.id}
-                    featureId={assoc.externalId}
+                    featureId={assoc.ref.externalId}
                     label={assoc.label}
                   />
                 ))
               )}
             </div>
           </section>
+
+          <VersionHistory guideId={data.id} currentVersionId={data.currentVersionId} />
 
           <section className="panel">
             <div className="border-b border-border px-4 py-3">
@@ -181,7 +183,7 @@ function GuideDetailPage() {
                   <li key={assoc.id} className="px-4 py-2.5">
                     <Link
                       to="/library/$guideId"
-                      params={{ guideId: assoc.externalId }}
+                      params={{ guideId: assoc.ref.externalId }}
                       className="text-sm font-medium hover:underline"
                     >
                       {assoc.label}
@@ -240,12 +242,12 @@ function AssocGroup({
   title,
   trail,
 }: {
-  guide: Guide;
+  guide: GuideWithVersion;
   kind: AssociationKind;
   title: string;
   trail: string;
 }) {
-  const items = guide.associations.filter((assoc) => assoc.kind === kind);
+  const items = guide.associations.filter((assoc) => assoc.ref.kind === kind);
   return (
     <div className="px-4 py-3">
       <p className="label-caps mb-2">{title}</p>
@@ -270,14 +272,61 @@ function AssocChip({ assoc, trail }: { assoc: GuideAssociation; trail: string })
     : null;
   return (
     <span className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5">
-      <SourceChip source={assoc.source} />
+      <SourceChip source={assoc.ref.source} />
       <span className="text-xs text-muted-foreground">
         {trail}
         {parentLabel ? ` → ${titleCase(parentLabel)}` : ""} →
       </span>
       <span className="text-sm font-medium">{assoc.label}</span>
-      <span className="font-mono text-[0.625rem] text-muted-foreground">{assoc.externalId}</span>
+      <span className="font-mono text-[0.625rem] text-muted-foreground">{assoc.ref.externalId}</span>
     </span>
+  );
+}
+
+/**
+ * Guide versions are Guide Studio-owned entities: lifecycle status, version
+ * number and publication timestamps live here, not on the guide.
+ */
+function VersionHistory({
+  guideId,
+  currentVersionId,
+}: {
+  guideId: string;
+  currentVersionId: string;
+}) {
+  const versions = useQuery(guideQueries.versions(guideId));
+  return (
+    <section className="panel">
+      <div className="border-b border-border px-4 py-3">
+        <h2 className="text-sm font-semibold">Version history</h2>
+        <p className="text-xs text-muted-foreground">Guide Studio-owned lifecycle records</p>
+      </div>
+      {versions.isPending ? (
+        <LoadingRows rows={2} />
+      ) : versions.isError ? (
+        <div className="px-4 py-3">
+          <button
+            onClick={() => versions.refetch()}
+            className="text-xs text-destructive hover:underline"
+          >
+            Version history failed to load — retry
+          </button>
+        </div>
+      ) : (
+        <ul className="divide-y divide-border">
+          {versions.data!.map((version) => (
+            <li key={version.id} className="flex items-center gap-3 px-4 py-2.5">
+              <span className="font-mono text-xs">v{version.versionNumber}</span>
+              <StatusBadge status={version.status} />
+              <span className="ml-auto text-xs text-muted-foreground">
+                {version.id === currentVersionId ? "Current · " : ""}
+                {formatDate(version.publishedAt ?? version.updatedAt)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

@@ -9,7 +9,7 @@ import {
   GUIDE_STATUS_LABELS,
   GUIDE_STATUS_ORDER,
   GUIDE_TYPE_LABELS,
-  type Guide,
+  type GuideWithVersion,
 } from "@/domain/types";
 import { formatDate, relativeDays } from "@/lib/format";
 import { guideQueries } from "@/lib/queries";
@@ -93,7 +93,7 @@ function QueueSection({
 }: {
   title: string;
   description: string;
-  query: UseQueryResult<Guide[], Error>;
+  query: UseQueryResult<GuideWithVersion[], Error>;
 }) {
   const guides = query.data ?? [];
 
@@ -125,7 +125,7 @@ function QueueSection({
                   {GUIDE_TYPE_LABELS[guide.guideType]} · {guide.owner}
                 </p>
               </div>
-              <StatusBadge status={guide.status} />
+              <StatusBadge status={guide.currentVersion.status} />
               <div className="flex items-center gap-1.5">
                 <ActionButton action="guide.action.review" size="sm" variant="ghost" />
                 <ActionButton action="guide.action.approve" size="sm" variant="ghost" />

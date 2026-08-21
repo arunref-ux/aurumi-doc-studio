@@ -1,4 +1,12 @@
-import type { Guide, GuideActivityEntry, GuideAssociation, GuideStatus, GuideType } from "@/domain/types";
+import type {
+  Guide,
+  GuideActivityEntry,
+  GuideAssociation,
+  GuideReferenceTarget,
+  GuideType,
+  GuideVersion,
+  GuideVersionStatus,
+} from "@/domain/types";
 
 type AssocSpec = Omit<GuideAssociation, "id" | "guideId">;
 
@@ -7,7 +15,8 @@ interface GuideSeed {
   title: string;
   summary: string;
   guideType: GuideType;
-  status: GuideStatus;
+  /** Seeded lifecycle state of the guide's current version. */
+  status: GuideVersionStatus;
   currentVersion: string;
   owner: string;
   createdAt: string;
@@ -16,49 +25,41 @@ interface GuideSeed {
   associations: AssocSpec[];
 }
 
+const ref = (
+  source: GuideReferenceTarget["source"],
+  kind: GuideReferenceTarget["kind"],
+  externalId: string,
+) => ({ source, kind, externalId }) as GuideReferenceTarget;
+
 const app = (externalId: string, label: string): AssocSpec => ({
-  kind: "app",
-  source: "devharmony",
-  externalId,
+  ref: ref("devharmony", "app", externalId),
   label,
 });
 const feature = (externalId: string, label: string, parentExternalId: string): AssocSpec => ({
-  kind: "feature",
-  source: "devharmony",
-  externalId,
+  ref: ref("devharmony", "feature", externalId),
   label,
   parentExternalId,
 });
 const topic = (externalId: string, label: string): AssocSpec => ({
-  kind: "topic",
-  source: "ai-studio",
-  externalId,
+  ref: ref("ai-studio", "topic", externalId),
   label,
 });
 const intent = (externalId: string, label: string, parentExternalId: string): AssocSpec => ({
-  kind: "intent",
-  source: "ai-studio",
-  externalId,
+  ref: ref("ai-studio", "intent", externalId),
   label,
   parentExternalId,
 });
 const connector = (externalId: string, label: string): AssocSpec => ({
-  kind: "connector",
-  source: "connector",
-  externalId,
+  ref: ref("connector", "connector", externalId),
   label,
 });
 const capability = (externalId: string, label: string, parentExternalId: string): AssocSpec => ({
-  kind: "capability",
-  source: "connector",
-  externalId,
+  ref: ref("connector", "capability", externalId),
   label,
   parentExternalId,
 });
 const related = (externalId: string, label: string): AssocSpec => ({
-  kind: "related-guide",
-  source: "guide-studio",
-  externalId,
+  ref: ref("guide-studio", "related-guide", externalId),
   label,
 });
 
@@ -386,18 +387,28 @@ function slugify(title: string) {
     .replace(/(^-|-$)/g, "");
 }
 
+export const seedGuideVersions: GuideVersion[] = seeds.map((seed) => ({
+  id: `${seed.id}-v${seed.currentVersion}`,
+  guideId: seed.id,
+  versionNumber: seed.currentVersion,
+  status: seed.status,
+  createdAt: seed.createdAt,
+  createdBy: seed.owner,
+  updatedAt: seed.updatedAt,
+  updatedBy: seed.owner,
+  publishedAt: seed.publishedAt ?? null,
+}));
+
 export const seedGuides: Guide[] = seeds.map((seed) => ({
   id: seed.id,
   title: seed.title,
   slug: slugify(seed.title),
   summary: seed.summary,
   guideType: seed.guideType,
-  status: seed.status,
-  currentVersion: seed.currentVersion,
+  currentVersionId: `${seed.id}-v${seed.currentVersion}`,
   owner: seed.owner,
   createdAt: seed.createdAt,
   updatedAt: seed.updatedAt,
-  publishedAt: seed.publishedAt ?? null,
   associations: seed.associations.map((assoc, index) => ({
     ...assoc,
     id: `${seed.id}-assoc-${index + 1}`,

@@ -6,9 +6,16 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataSta
 import { PageHeader } from "@/components/studio/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { refKey, type ExternalEntityReference } from "@/domain/external-ref";
+import { type CoverageState } from "@/domain/types";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/format";
-import { aiStudioQueries, connectorQueries, devHarmonyQueries, guideQueries } from "@/lib/queries";
+import {
+  aiStudioQueries,
+  connectorQueries,
+  coverageQueries,
+  devHarmonyQueries,
+} from "@/lib/queries";
 
 export const Route = createFileRoute("/sources")({
   head: () => ({
@@ -58,22 +65,33 @@ function SourcesPage() {
   );
 }
 
+/**
+ * Coverage state is resolved through the composition service using composite
+ * identity (source + kind + externalId), never bare external ids.
+ */
 function useCoverage() {
-  const covered = useQuery(guideQueries.coveredIds());
-  return (externalId: string) => (covered.data ?? []).includes(externalId);
+  const index = useQuery(coverageQueries.stateIndex());
+  return (ref: ExternalEntityReference): CoverageState =>
+    index.data?.[refKey(ref)] ?? "not-started";
 }
 
-function CoverageTag({ covered }: { covered: boolean }) {
+const COVERAGE_TAG: Record<CoverageState, { label: string; className: string }> = {
+  published: {
+    label: "Published",
+    className: "bg-status-published text-status-published-foreground",
+  },
+  "in-progress": {
+    label: "Authoring",
+    className: "bg-status-review text-status-review-foreground",
+  },
+  "not-started": { label: "No guide", className: "bg-muted text-muted-foreground" },
+};
+
+function CoverageTag({ state }: { state: CoverageState }) {
+  const tag = COVERAGE_TAG[state];
   return (
-    <span
-      className={cn(
-        "rounded-md px-1.5 py-0.5 text-[0.6875rem] font-medium",
-        covered
-          ? "bg-status-published text-status-published-foreground"
-          : "bg-status-review text-status-review-foreground",
-      )}
-    >
-      {covered ? "Documented" : "No guide"}
+    <span className={cn("rounded-md px-1.5 py-0.5 text-[0.6875rem] font-medium", tag.className)}>
+      {tag.label}
     </span>
   );
 }
@@ -166,7 +184,7 @@ function DevHarmonyExplorer() {
               }}
               primary={app.name}
               secondary={`${app.featureCount} features · ${app.externalId}`}
-              trailing={<CoverageTag covered={isCovered(app.externalId)} />}
+              trailing={<CoverageTag state={isCovered({ source: "devharmony", kind: "app", externalId: app.externalId })} />}
             />
           ))
         )}
@@ -193,7 +211,7 @@ function DevHarmonyExplorer() {
               onClick={() => setFeatureId(feature.externalId)}
               primary={feature.name}
               secondary={`Latest v${feature.latestVersion} · ${feature.externalId}`}
-              trailing={<CoverageTag covered={isCovered(feature.externalId)} />}
+              trailing={<CoverageTag state={isCovered({ source: "devharmony", kind: "feature", externalId: feature.externalId })} />}
             />
           ))
         )}
@@ -250,7 +268,7 @@ function AIStudioExplorer() {
               onClick={() => setTopicId(topic.externalId)}
               primary={topic.name}
               secondary={`${topic.intentCount} intents · ${topic.description}`}
-              trailing={<CoverageTag covered={isCovered(topic.externalId)} />}
+              trailing={<CoverageTag state={isCovered({ source: "ai-studio", kind: "topic", externalId: topic.externalId })} />}
             />
           ))
         )}
@@ -276,7 +294,7 @@ function AIStudioExplorer() {
               key={intent.externalId}
               primary={intent.name}
               secondary={`${intent.description} · ${intent.utteranceCount} utterances`}
-              trailing={<CoverageTag covered={isCovered(intent.externalId)} />}
+              trailing={<CoverageTag state={isCovered({ source: "ai-studio", kind: "intent", externalId: intent.externalId })} />}
             />
           ))
         )}
@@ -313,7 +331,7 @@ function ConnectorExplorer() {
               onClick={() => setConnectorId(connector.externalId)}
               primary={connector.name}
               secondary={`${connector.vendor} · ${connector.category} · ${connector.capabilityCount} capabilities`}
-              trailing={<CoverageTag covered={isCovered(connector.externalId)} />}
+              trailing={<CoverageTag state={isCovered({ source: "connector", kind: "connector", externalId: connector.externalId })} />}
             />
           ))
         )}
@@ -339,7 +357,7 @@ function ConnectorExplorer() {
               key={capability.externalId}
               primary={capability.name}
               secondary={capability.description}
-              trailing={<CoverageTag covered={isCovered(capability.externalId)} />}
+              trailing={<CoverageTag state={isCovered({ source: "connector", kind: "capability", externalId: capability.externalId })} />}
             />
           ))
         )}
