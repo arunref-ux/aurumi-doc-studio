@@ -4,6 +4,13 @@ import { DEFAULT_USER_ID, SEEDED_USERS } from "./users";
 
 const delay = (ms = 140) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+const STORAGE_KEY = "guide-studio.prototype-user";
+
+function readStored(): string {
+  if (typeof window === "undefined") return DEFAULT_USER_ID;
+  return window.sessionStorage.getItem(STORAGE_KEY) ?? DEFAULT_USER_ID;
+}
+
 let activeUserId = DEFAULT_USER_ID;
 
 function find(userId: string): AuthorizedUser {
@@ -14,6 +21,7 @@ export const mockAuthorizationProvider: AuthorizationProvider = {
   supportsSimulation: true,
   async getCurrentUser() {
     await delay();
+    activeUserId = find(readStored()).id;
     return find(activeUserId);
   },
   async listSimulatedUsers() {
@@ -23,6 +31,9 @@ export const mockAuthorizationProvider: AuthorizationProvider = {
   async setCurrentUser(userId: string) {
     await delay(60);
     activeUserId = find(userId).id;
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(STORAGE_KEY, activeUserId);
+    }
     return find(activeUserId);
   },
 };
