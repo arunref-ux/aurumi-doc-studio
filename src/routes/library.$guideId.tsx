@@ -166,6 +166,8 @@ function GuideDetailPage() {
             </div>
           </section>
 
+          <VersionHistory guideId={data.id} currentVersionId={data.currentVersionId} />
+
           <section className="panel">
             <div className="border-b border-border px-4 py-3">
               <h2 className="text-sm font-semibold">Related guides</h2>
@@ -278,6 +280,53 @@ function AssocChip({ assoc, trail }: { assoc: GuideAssociation; trail: string })
       <span className="text-sm font-medium">{assoc.label}</span>
       <span className="font-mono text-[0.625rem] text-muted-foreground">{assoc.ref.externalId}</span>
     </span>
+  );
+}
+
+/**
+ * Guide versions are Guide Studio-owned entities: lifecycle status, version
+ * number and publication timestamps live here, not on the guide.
+ */
+function VersionHistory({
+  guideId,
+  currentVersionId,
+}: {
+  guideId: string;
+  currentVersionId: string;
+}) {
+  const versions = useQuery(guideQueries.versions(guideId));
+  return (
+    <section className="panel">
+      <div className="border-b border-border px-4 py-3">
+        <h2 className="text-sm font-semibold">Version history</h2>
+        <p className="text-xs text-muted-foreground">Guide Studio-owned lifecycle records</p>
+      </div>
+      {versions.isPending ? (
+        <LoadingRows rows={2} />
+      ) : versions.isError ? (
+        <div className="px-4 py-3">
+          <button
+            onClick={() => versions.refetch()}
+            className="text-xs text-destructive hover:underline"
+          >
+            Version history failed to load — retry
+          </button>
+        </div>
+      ) : (
+        <ul className="divide-y divide-border">
+          {versions.data!.map((version) => (
+            <li key={version.id} className="flex items-center gap-3 px-4 py-2.5">
+              <span className="font-mono text-xs">v{version.versionNumber}</span>
+              <StatusBadge status={version.status} />
+              <span className="ml-auto text-xs text-muted-foreground">
+                {version.id === currentVersionId ? "Current · " : ""}
+                {formatDate(version.publishedAt ?? version.updatedAt)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
