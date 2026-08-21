@@ -11,10 +11,10 @@ import {
   GUIDE_STATUS_LABELS,
   GUIDE_STATUS_ORDER,
   type CoverageBucket,
-  type Guide,
+  type GuideWithVersion,
 } from "@/domain/types";
 import { daysSince, formatDateTime, relativeDays } from "@/lib/format";
-import { guideQueries } from "@/lib/queries";
+import { coverageQueries, guideQueries } from "@/lib/queries";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/")({
 
 function DashboardPage() {
   const counts = useQuery(guideQueries.statusCounts());
-  const coverage = useQuery(guideQueries.coverage());
+  const coverage = useQuery(coverageQueries.summary());
   const activity = useQuery(guideQueries.recentActivity(8));
   const guides = useQuery(guideQueries.list());
 
@@ -142,7 +142,7 @@ function DashboardPage() {
                         {entry.detail ? ` · ${entry.detail}` : ""} · {entry.actor}
                       </p>
                     </div>
-                    {guide ? <StatusBadge status={guide.status} /> : null}
+                    {guide ? <StatusBadge status={guide.currentVersion.status} /> : null}
                     <span className="hidden w-32 shrink-0 text-right text-xs text-muted-foreground sm:inline">
                       {formatDateTime(entry.at)}
                     </span>
@@ -200,7 +200,8 @@ function KpiCard({
 }
 
 function CoverageCard({ bucket, source }: { bucket: CoverageBucket; source: string }) {
-  const pct = bucket.total === 0 ? 0 : Math.round((bucket.covered / bucket.total) * 100);
+  const pct = bucket.total === 0 ? 0 : Math.round((bucket.published / bucket.total) * 100);
+  const gaps = bucket.entities.filter((entity) => entity.state === "not-started");
   return (
     <div className="panel p-4">
       <div className="flex items-start justify-between gap-3">
@@ -211,24 +212,32 @@ function CoverageCard({ bucket, source }: { bucket: CoverageBucket; source: stri
         <p className="text-2xl font-semibold tabular-nums">{pct}%</p>
       </div>
       <Progress value={pct} className="mt-3 h-1.5" />
-      <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
+      <dl className="mt-3 grid grid-cols-4 gap-2 text-xs">
         <div>
           <dt className="text-muted-foreground">Total</dt>
           <dd className="font-medium tabular-nums">{bucket.total}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Covered</dt>
-          <dd className="font-medium tabular-nums text-status-published-foreground">{bucket.covered}</dd>
+          <dt className="text-muted-foreground">Published</dt>
+          <dd className="font-medium tabular-nums text-status-published-foreground">
+            {bucket.published}
+          </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">No guide</dt>
-          <dd className="font-medium tabular-nums text-status-review-foreground">{bucket.uncovered}</dd>
+          <dt className="text-muted-foreground">In progress</dt>
+          <dd className="font-medium tabular-nums text-status-review-foreground">
+            {bucket.inProgress}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Not started</dt>
+          <dd className="font-medium tabular-nums">{bucket.notStarted}</dd>
         </div>
       </dl>
-      {bucket.uncoveredExamples.length > 0 ? (
+      {gaps.length > 0 ? (
         <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">
-          Gaps: {bucket.uncoveredExamples.slice(0, 3).join(", ")}
-          {bucket.uncoveredExamples.length > 3 ? ` +${bucket.uncoveredExamples.length - 3} more` : ""}
+          Not started: {gaps.slice(0, 3).map((entity) => entity.name).join(", ")}
+          {gaps.length > 3 ? ` +${gaps.length - 3} more` : ""}
         </p>
       ) : null}
     </div>
@@ -239,12 +248,12 @@ function AttentionList({
   guides,
   features,
 }: {
-  guides: Guide[];
+  guides: GuideWithVersion[];
   features?: CoverageBucket | undefined;
 }) {
-  const inReview = guides.filter((guide) => guide.status === "in-review");
+  const inReview = guides.filter((guide) => guide.currentVersion.status === "in-review");
   const staleDrafts = guides.filter(
-    (guide) => guide.status === "draft" && daysSince(guide.updatedAt) > 45,
+    (guide) => guide.currentVersion.status === "draft" && daysSince(guide.updatedAt) > 45,
   );
 
   return (
@@ -259,10 +268,13 @@ function AttentionList({
           <AttentionRow key={guide.id} guide={guide} note={`Updated ${relativeDays(guide.updatedAt)}`} />
         ))}
       </AttentionGroup>
-      <AttentionGroup title="Features with no documentation" count={features?.uncovered ?? 0}>
-        {(features?.uncoveredExamples ?? []).slice(0, 5).map((name) => (
-          <li key={name} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-            <span className="truncate">{name}</span>
+      <AttentionGroup title="Features with no documentation" count={features?.notStarted ?? 0}>
+        {(features?.entities ?? [])
+          .filter((entity) => entity.state === "not-started")
+          .slice(0, 5)
+          .map((entity) => (
+          <li key={entity.ref.externalId} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
+            <span className="truncate">{entity.name}</span>
             <Link
               to="/sources"
               className="inline-flex shrink-0 items-center gap-1 text-xs text-primary hover:underline"
@@ -302,7 +314,7 @@ function AttentionGroup({
   );
 }
 
-function AttentionRow({ guide, note }: { guide: Guide; note: string }) {
+function AttentionRow({ guide, note }: { guide: GuideWithVersion; note: string }) {
   return (
     <li className="flex items-center justify-between gap-3 px-4 py-2">
       <div className="min-w-0">
@@ -317,7 +329,7 @@ function AttentionRow({ guide, note }: { guide: Guide; note: string }) {
           {guide.owner} · {note}
         </p>
       </div>
-      <StatusBadge status={guide.status} />
+      <StatusBadge status={guide.currentVersion.status} />
     </li>
   );
 }
