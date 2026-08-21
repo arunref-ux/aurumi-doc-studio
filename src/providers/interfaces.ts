@@ -47,6 +47,36 @@ export interface CreateAssociationInput {
   parentExternalId?: string;
 }
 
+export interface RemoveAssociationInput {
+  guideId: string;
+  ref: GuideReferenceTarget;
+}
+
+/** Association draft carried by Create/Update, before it has an id. */
+export interface AssociationDraft {
+  ref: GuideReferenceTarget;
+  label: string;
+  parentExternalId?: string;
+}
+
+export interface CreateGuideInput {
+  title: string;
+  summary: string;
+  guideType: GuideType;
+  /** Display name of the acting user; authorization happens in the command bus. */
+  actor: string;
+  associations?: AssociationDraft[];
+}
+
+export interface UpdateGuideInput {
+  guideId: string;
+  title: string;
+  summary: string;
+  guideType: GuideType;
+  actor: string;
+}
+
+
 /**
  * Guide Studio owns Guides, GuideVersions and GuideAssociations only.
  * It never enumerates external hierarchies.
