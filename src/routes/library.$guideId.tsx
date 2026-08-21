@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
+import { ActionButton } from "@/components/studio/PermissionGate";
 import { SourceChip } from "@/components/studio/SourceChip";
 import { StatusBadge } from "@/components/studio/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -88,9 +89,13 @@ function GuideDetailPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={data.status} />
-            <Button size="sm" variant="outline" disabled>
-              <Lock className="size-3.5" /> Edit Guide — authoring in next build
-            </Button>
+            <ActionButton action="guide.action.edit" icon={<Pencil className="size-3.5" />} />
+            <ActionButton action="guide.action.submit_for_review" />
+            <ActionButton action="guide.action.approve" />
+            <ActionButton action="guide.action.request_changes" />
+            <ActionButton action="guide.action.publish" />
+            <ActionButton action="guide.action.unpublish" />
+            <ActionButton action="guide.action.archive" />
           </div>
         </div>
 

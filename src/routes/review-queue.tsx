@@ -2,6 +2,7 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
+import { ActionButton } from "@/components/studio/PermissionGate";
 import { PageHeader } from "@/components/studio/PageHeader";
 import { StatusBadge } from "@/components/studio/StatusBadge";
 import {
@@ -126,6 +127,12 @@ function QueueSection({
                 </p>
               </div>
               <StatusBadge status={guide.status} />
+              <div className="flex items-center gap-1.5">
+                <ActionButton action="guide.action.review" size="sm" variant="ghost" />
+                <ActionButton action="guide.action.approve" size="sm" variant="ghost" />
+                <ActionButton action="guide.action.request_changes" size="sm" variant="ghost" />
+                <ActionButton action="guide.action.publish" size="sm" variant="ghost" />
+              </div>
               <span className="w-40 text-right text-xs text-muted-foreground">
                 {formatDate(guide.updatedAt)} · {relativeDays(guide.updatedAt)}
               </span>

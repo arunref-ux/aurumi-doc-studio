@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { RefreshCw, Search, X } from "lucide-react";
+import { Plus, RefreshCw, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
+import { ActionButton } from "@/components/studio/PermissionGate";
 import { PageHeader } from "@/components/studio/PageHeader";
 import { SourceChip } from "@/components/studio/SourceChip";
 import { StatusBadge } from "@/components/studio/StatusBadge";
@@ -88,9 +89,16 @@ function LibraryPage() {
         title="Guide Library"
         description="Guides are owned by Guide Studio and reference entities in DevHarmony, Aurumi AI Studio and connector systems."
         actions={
-          <Button variant="outline" size="sm" onClick={() => guides.refetch()}>
-            <RefreshCw className="size-3.5" /> Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => guides.refetch()}>
+              <RefreshCw className="size-3.5" /> Refresh
+            </Button>
+            <ActionButton
+              action="guide.action.create"
+              variant="default"
+              icon={<Plus className="size-3.5" />}
+            />
+          </div>
         }
       />
 
