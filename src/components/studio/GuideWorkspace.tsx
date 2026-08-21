@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Loader2, Save, Trash2, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -74,6 +75,7 @@ const EMPTY_DRAFT: Draft = {
 export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
   const mode = guide ? "edit" : "create";
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuthorization();
 
   const createGuide = useGuideCommand(guideCommands.createGuide);
@@ -149,6 +151,7 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
           actor,
           associations: draft.associations,
         });
+        await queryClient.invalidateQueries();
         setSaveState("saved");
         await navigate({ to: "/library/edit/$guideId", params: { guideId: created.id } });
         return;
@@ -183,6 +186,7 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
         }
       }
 
+      await queryClient.invalidateQueries();
       setSaveState("saved");
       await navigate({ to: "/library/edit/$guideId", params: { guideId: guide.id } });
     } catch (caught) {
