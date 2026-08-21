@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
 import { ActionButton } from "@/components/studio/PermissionGate";
@@ -13,6 +13,7 @@ import {
   type GuideAssociation,
   type GuideWithVersion,
 } from "@/domain/types";
+import { versionIsEditable } from "@/domain/guide-editing";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { devHarmonyQueries, guideQueries } from "@/lib/queries";
 
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/library/$guideId")({
 
 function GuideDetailPage() {
   const { guideId } = Route.useParams();
+  const navigate = useNavigate();
   const guide = useQuery(guideQueries.detail(guideId));
   const activity = useQuery(guideQueries.activity(guideId));
 
@@ -89,7 +91,16 @@ function GuideDetailPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={data.currentVersion.status} />
-            <ActionButton action="guide.action.edit" icon={<Pencil className="size-3.5" />} />
+            <ActionButton
+              action="guide.action.edit"
+              icon={<Pencil className="size-3.5" />}
+              {...(versionIsEditable(data.currentVersion)
+                ? {
+                    onClick: () =>
+                      void navigate({ to: "/library/edit/$guideId", params: { guideId: data.id } }),
+                  }
+                : {})}
+            />
             <ActionButton action="guide.action.submit_for_review" />
             <ActionButton action="guide.action.approve" />
             <ActionButton action="guide.action.request_changes" />
