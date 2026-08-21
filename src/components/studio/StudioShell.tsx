@@ -10,13 +10,20 @@ import {
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+interface NavItem {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+}
+
+const navItems: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/library", label: "Guide Library", icon: BookOpen },
   { to: "/review-queue", label: "Review Queue", icon: ClipboardCheck },
   { to: "/coverage", label: "Documentation Coverage", icon: ShieldCheck },
   { to: "/sources", label: "Sources", icon: Database },
-] as const;
+];
 
 export function StudioShell({ children }: { children: ReactNode }) {
   return (
