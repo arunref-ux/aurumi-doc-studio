@@ -10,6 +10,7 @@ import type {
   GuideQuery,
   GuideReferenceTarget,
   GuideStatusCounts,
+  GuideType,
   GuideVersion,
   GuideWithVersion,
   IntentRef,
