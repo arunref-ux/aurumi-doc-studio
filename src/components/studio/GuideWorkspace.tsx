@@ -157,38 +157,20 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
         return;
       }
 
-      await updateGuide({
+      // One logical mutation: metadata + the complete association set are
+      // validated together and committed atomically by the provider. No
+      // per-association calls, so no partially applied edit is possible and no
+      // UI-level rollback is needed. guideType is not part of this payload.
+      await updateGuideDraft({
         guideId: guide.id,
         title: draft.title,
         summary: draft.summary,
-        guideType: draft.guideType,
         actor,
+        associations: draft.associations,
       });
-
-      const baselineKeys = baseline.associations.map((association) => refKey(association.ref));
-      const draftKeys = draft.associations.map((association) => refKey(association.ref));
-
-      for (const association of baseline.associations) {
-        if (!draftKeys.includes(refKey(association.ref))) {
-          await removeAssociation({ guideId: guide.id, ref: association.ref });
-        }
-      }
-      for (const association of draft.associations) {
-        if (!baselineKeys.includes(refKey(association.ref))) {
-          await addAssociation({
-            guideId: guide.id,
-            ref: association.ref,
-            label: association.label,
-            ...(association.parentExternalId
-              ? { parentExternalId: association.parentExternalId }
-              : {}),
-          });
-        }
-      }
 
       await queryClient.invalidateQueries();
       setSaveState("saved");
-      await navigate({ to: "/library/edit/$guideId", params: { guideId: guide.id } });
     } catch (caught) {
       setSaveState("error");
       setError(caught instanceof Error ? caught.message : "Unable to save this guide.");
