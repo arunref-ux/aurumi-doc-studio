@@ -33,7 +33,7 @@ import type {
   CreateGuideInput,
   GuideStudioProvider,
   RemoveAssociationInput,
-  UpdateGuideInput,
+  UpdateGuideDraftInput,
 } from "@/providers/interfaces";
 import { clone, simulateRequest } from "./latency";
 
@@ -368,7 +368,16 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
       { label: "Guide Studio Guide API" },
     ),
 
-  updateGuide: (input: UpdateGuideInput) =>
+  /**
+   * Single logical draft update.
+   *
+   * Metadata AND the complete association set are validated in a staging area
+   * against the whole candidate store first; the persisted Guide is only
+   * mutated once every rule passes, so a validation failure (or a throw) can
+   * never leave metadata updated with associations rejected, or vice versa.
+   * `guideType` is not part of this contract and is never mutated here.
+   */
+  updateGuideDraft: (input: UpdateGuideDraftInput) =>
     simulateRequest(
       () => {
         const guide = requireGuide(input.guideId);
@@ -378,11 +387,46 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
 
         const now = new Date().toISOString();
         const title = input.title.trim();
-        guide.title = title;
-        guide.slug = uniqueSlug(title, guide.id);
-        guide.summary = input.summary.trim();
-        guide.guideType = input.guideType;
+
+        // ---- stage associations (same shared rules as create/init) ----
+        const existingByKey = new Map(
+          guide.associations.map((association) => [refKey(association.ref), association]),
+        );
+        const stagedAssociations: GuideAssociation[] = [];
+        for (const draft of input.associations) {
+          assertAssociationValid({ guideId: guide.id, ref: draft.ref }, stagedAssociations);
+          const existing = existingByKey.get(refKey(draft.ref));
+          stagedAssociations.push({
+            id: existing?.id ?? nextId(`${guide.id}-assoc`),
+            guideId: guide.id,
+            ref: draft.ref,
+            label: draft.label,
+            ...(draft.parentExternalId ? { parentExternalId: draft.parentExternalId } : {}),
+          });
+        }
+
+        // ---- full-store integrity gate before any commit ----
+        const stagedGuide: Guide = {
+          ...guide,
+          title,
+          slug: uniqueSlug(title, guide.id),
+          summary: input.summary.trim(),
+          updatedAt: now,
+          associations: stagedAssociations,
+        };
+        const candidateGuides = guides.map((item) =>
+          item.id === guide.id ? stagedGuide : item,
+        );
+        validateGuideAssociations(candidateGuides);
+        validateGuideVersions(candidateGuides, versions);
+
+        // ---- commit ----
+        guide.title = stagedGuide.title;
+        guide.slug = stagedGuide.slug;
+        guide.summary = stagedGuide.summary;
+        guide.associations = stagedAssociations;
         guide.updatedAt = now;
+
 
         // GuideVersion remains the lifecycle authority: status is untouched,
         // only its edit provenance moves forward.
