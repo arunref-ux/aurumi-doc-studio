@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { UserSwitcher } from "@/components/studio/UserSwitcher";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -91,11 +92,12 @@ function TopBar() {
         </span>
         <span
           className={cn(
-            "flex size-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground",
+            "hidden rounded-full border border-dashed border-border px-2 py-0.5 text-[0.6875rem] text-muted-foreground md:inline",
           )}
         >
-          AB
+          Prototype access simulation
         </span>
+        <UserSwitcher />
       </div>
     </div>
   );
