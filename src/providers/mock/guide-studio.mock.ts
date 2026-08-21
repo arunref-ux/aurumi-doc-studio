@@ -10,17 +10,31 @@ import {
   guideProvidesPublishedCoverage,
 } from "@/domain/guide-lifecycle";
 import {
+  assertGuideMetadataValid,
+  assertVersionEditable,
+  INITIAL_VERSION_NUMBER,
+  INITIAL_VERSION_STATUS,
+  slugifyTitle,
+} from "@/domain/guide-editing";
+import {
   GUIDE_STATUS_ORDER,
   GUIDE_TYPE_LABELS,
   type CoverageFact,
   type Guide,
+  type GuideActivityEntry,
   type GuideAssociation,
   type GuideQuery,
   type GuideVersion,
   type GuideVersionStatus,
   type GuideWithVersion,
 } from "@/domain/types";
-import type { CreateAssociationInput, GuideStudioProvider } from "@/providers/interfaces";
+import type {
+  CreateAssociationInput,
+  CreateGuideInput,
+  GuideStudioProvider,
+  RemoveAssociationInput,
+  UpdateGuideInput,
+} from "@/providers/interfaces";
 import { clone, simulateRequest } from "./latency";
 
 /**
@@ -29,6 +43,7 @@ import { clone, simulateRequest } from "./latency";
  */
 const guides: Guide[] = seedGuides.map((guide) => ({ ...guide }));
 const versions: GuideVersion[] = seedGuideVersions.map((version) => ({ ...version }));
+const activity: GuideActivityEntry[] = seedActivity.map((entry) => ({ ...entry }));
 
 /**
  * Store initialization integrity gate. Seed, imported and future hydrated data
@@ -37,6 +52,7 @@ const versions: GuideVersion[] = seedGuideVersions.map((version) => ({ ...versio
  */
 validateGuideAssociations(guides);
 validateGuideVersions(guides, versions);
+
 
 function versionsOf(guideId: string): GuideVersion[] {
   return versions.filter((version) => version.guideId === guideId);
