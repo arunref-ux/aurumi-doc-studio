@@ -2,6 +2,7 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
+import { ActionButton } from "@/components/studio/PermissionGate";
 import { PageHeader } from "@/components/studio/PageHeader";
 import { StatusBadge } from "@/components/studio/StatusBadge";
 import {
@@ -56,7 +57,10 @@ function ReviewQueuePage() {
         <h2 className="label-caps mb-2.5">Status summary</h2>
         {counts.isError ? (
           <div className="panel">
-            <ErrorState message={(counts.error as Error)?.message} onRetry={() => counts.refetch()} />
+            <ErrorState
+              message={(counts.error as Error)?.message}
+              onRetry={() => counts.refetch()}
+            />
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -64,7 +68,7 @@ function ReviewQueuePage() {
               <div key={status} className="panel px-4 py-3">
                 <p className="label-caps">{GUIDE_STATUS_LABELS[status]}</p>
                 <p className="mt-1 text-2xl font-semibold tabular-nums">
-                  {counts.isPending ? "—" : counts.data?.byStatus[status] ?? 0}
+                  {counts.isPending ? "—" : (counts.data?.byStatus[status] ?? 0)}
                 </p>
               </div>
             ))}
@@ -72,11 +76,7 @@ function ReviewQueuePage() {
         )}
       </section>
 
-      <QueueSection
-        title="In review"
-        description="Awaiting reviewer sign-off."
-        query={pending}
-      />
+      <QueueSection title="In review" description="Awaiting reviewer sign-off." query={pending} />
       <QueueSection
         title="Approved, awaiting publish"
         description="Content approved; publishing is not available in Build 1."
@@ -126,6 +126,12 @@ function QueueSection({
                 </p>
               </div>
               <StatusBadge status={guide.status} />
+              <div className="flex items-center gap-1.5">
+                <ActionButton action="guide.action.review" size="sm" variant="ghost" />
+                <ActionButton action="guide.action.approve" size="sm" variant="ghost" />
+                <ActionButton action="guide.action.request_changes" size="sm" variant="ghost" />
+                <ActionButton action="guide.action.publish" size="sm" variant="ghost" />
+              </div>
               <span className="w-40 text-right text-xs text-muted-foreground">
                 {formatDate(guide.updatedAt)} · {relativeDays(guide.updatedAt)}
               </span>

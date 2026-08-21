@@ -53,9 +53,7 @@ export function EmptyState({
     <div className={cn("flex flex-col items-center gap-2 px-6 py-10 text-center", className)}>
       <Inbox className="size-5 text-muted-foreground" />
       <p className="text-sm font-medium">{title}</p>
-      {description ? (
-        <p className="max-w-sm text-xs text-muted-foreground">{description}</p>
-      ) : null}
+      {description ? <p className="max-w-sm text-xs text-muted-foreground">{description}</p> : null}
     </div>
   );
 }

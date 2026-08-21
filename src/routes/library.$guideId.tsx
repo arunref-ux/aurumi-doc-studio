@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
+import { ActionButton } from "@/components/studio/PermissionGate";
 import { SourceChip } from "@/components/studio/SourceChip";
 import { StatusBadge } from "@/components/studio/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -88,9 +89,13 @@ function GuideDetailPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={data.status} />
-            <Button size="sm" variant="outline" disabled>
-              <Lock className="size-3.5" /> Edit Guide — authoring in next build
-            </Button>
+            <ActionButton action="guide.action.edit" icon={<Pencil className="size-3.5" />} />
+            <ActionButton action="guide.action.submit_for_review" />
+            <ActionButton action="guide.action.approve" />
+            <ActionButton action="guide.action.request_changes" />
+            <ActionButton action="guide.action.publish" />
+            <ActionButton action="guide.action.unpublish" />
+            <ActionButton action="guide.action.archive" />
           </div>
         </div>
 
@@ -126,7 +131,12 @@ function GuideDetailPage() {
             <AssocGroup guide={data} kind="topic" title="AI Topics" trail="AI Studio" />
             <AssocGroup guide={data} kind="intent" title="AI Intents" trail="AI Studio" />
             <AssocGroup guide={data} kind="connector" title="Connectors" trail="Connector" />
-            <AssocGroup guide={data} kind="capability" title="Connector Capabilities" trail="Connector" />
+            <AssocGroup
+              guide={data}
+              kind="capability"
+              title="Connector Capabilities"
+              trail="Connector"
+            />
           </div>
         </section>
 
@@ -146,7 +156,11 @@ function GuideDetailPage() {
                 </p>
               ) : (
                 featureAssocs.map((assoc) => (
-                  <FeatureVersions key={assoc.id} featureId={assoc.externalId} label={assoc.label} />
+                  <FeatureVersions
+                    key={assoc.id}
+                    featureId={assoc.externalId}
+                    label={assoc.label}
+                  />
                 ))
               )}
             </div>
@@ -157,7 +171,10 @@ function GuideDetailPage() {
               <h2 className="text-sm font-semibold">Related guides</h2>
             </div>
             {relatedGuides.length === 0 ? (
-              <EmptyState title="No related guides" description="Relationships can be curated later." />
+              <EmptyState
+                title="No related guides"
+                description="Relationships can be curated later."
+              />
             ) : (
               <ul className="divide-y divide-border">
                 {relatedGuides.map((assoc) => (
@@ -182,7 +199,10 @@ function GuideDetailPage() {
             {activity.isPending ? (
               <LoadingRows rows={3} />
             ) : activity.isError ? (
-              <ErrorState message={(activity.error as Error)?.message} onRetry={() => activity.refetch()} />
+              <ErrorState
+                message={(activity.error as Error)?.message}
+                onRetry={() => activity.refetch()}
+              />
             ) : activity.data!.length === 0 ? (
               <EmptyState title="No recorded activity" />
             ) : (

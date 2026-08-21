@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { UserSwitcher } from "@/components/studio/UserSwitcher";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -59,7 +60,9 @@ export function StudioShell({ children }: { children: ReactNode }) {
 
         <div className="border-t border-sidebar-border px-5 py-4 text-[0.6875rem] leading-relaxed text-sidebar-muted">
           <p className="font-medium text-sidebar-foreground">Build 1 · Prototype</p>
-          <p>Simulated source providers. Authoring, review and publishing arrive in later builds.</p>
+          <p>
+            Simulated source providers. Authoring, review and publishing arrive in later builds.
+          </p>
         </div>
       </aside>
 
@@ -91,11 +94,12 @@ function TopBar() {
         </span>
         <span
           className={cn(
-            "flex size-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground",
+            "hidden rounded-full border border-dashed border-border px-2 py-0.5 text-[0.6875rem] text-muted-foreground md:inline",
           )}
         >
-          AB
+          Prototype access simulation
         </span>
+        <UserSwitcher />
       </div>
     </div>
   );

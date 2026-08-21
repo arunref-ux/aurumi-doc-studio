@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { RefreshCw, Search, X } from "lucide-react";
+import { Plus, RefreshCw, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
+import { ActionButton } from "@/components/studio/PermissionGate";
 import { PageHeader } from "@/components/studio/PageHeader";
 import { SourceChip } from "@/components/studio/SourceChip";
 import { StatusBadge } from "@/components/studio/StatusBadge";
@@ -88,9 +89,16 @@ function LibraryPage() {
         title="Guide Library"
         description="Guides are owned by Guide Studio and reference entities in DevHarmony, Aurumi AI Studio and connector systems."
         actions={
-          <Button variant="outline" size="sm" onClick={() => guides.refetch()}>
-            <RefreshCw className="size-3.5" /> Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => guides.refetch()}>
+              <RefreshCw className="size-3.5" /> Refresh
+            </Button>
+            <ActionButton
+              action="guide.action.create"
+              variant="default"
+              icon={<Plus className="size-3.5" />}
+            />
+          </div>
         }
       />
 
@@ -110,7 +118,10 @@ function LibraryPage() {
             value={status}
             onChange={(value) => setStatus(value as GuideStatus | typeof ALL)}
             placeholder="All statuses"
-            options={GUIDE_STATUS_ORDER.map((item) => ({ value: item, label: GUIDE_STATUS_LABELS[item] }))}
+            options={GUIDE_STATUS_ORDER.map((item) => ({
+              value: item,
+              label: GUIDE_STATUS_LABELS[item],
+            }))}
           />
           <FilterSelect
             value={guideType}
@@ -128,7 +139,10 @@ function LibraryPage() {
             value={topicExternalId}
             onChange={setTopicExternalId}
             placeholder="All AI topics"
-            options={(topics.data ?? []).map((topic) => ({ value: topic.externalId, label: topic.name }))}
+            options={(topics.data ?? []).map((topic) => ({
+              value: topic.externalId,
+              label: topic.name,
+            }))}
           />
           <FilterSelect
             value={connectorExternalId}
@@ -190,7 +204,9 @@ function LibraryPage() {
                       >
                         {guide.title}
                       </Link>
-                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{guide.summary}</p>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                        {guide.summary}
+                      </p>
                     </td>
                     <td className="px-4 py-2.5 text-xs text-muted-foreground">
                       {GUIDE_TYPE_LABELS[guide.guideType]}
@@ -198,7 +214,9 @@ function LibraryPage() {
                     <td className="px-4 py-2.5">
                       <StatusBadge status={guide.status} />
                     </td>
-                    <td className="px-4 py-2.5 font-mono text-xs tabular-nums">{guide.currentVersion}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs tabular-nums">
+                      {guide.currentVersion}
+                    </td>
                     <td className="px-4 py-2.5">
                       <PrimaryContext guide={guide} />
                     </td>

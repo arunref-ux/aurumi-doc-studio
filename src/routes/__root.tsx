@@ -10,7 +10,9 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { GuideStudioAuthorizationProvider } from "@/auth/AuthorizationContext";
 import { StudioShell } from "@/components/studio/StudioShell";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -132,10 +134,14 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <StudioShell>
-        <Outlet />
-      </StudioShell>
+      <GuideStudioAuthorizationProvider>
+        <TooltipProvider delayDuration={200}>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <StudioShell>
+            <Outlet />
+          </StudioShell>
+        </TooltipProvider>
+      </GuideStudioAuthorizationProvider>
     </QueryClientProvider>
   );
 }
