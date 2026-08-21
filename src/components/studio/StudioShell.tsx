@@ -80,19 +80,11 @@ function TopBar() {
         </span>
         <span className="text-sm font-semibold">Guide Studio</span>
       </div>
-      <nav className="hidden items-center gap-1 lg:flex">
-        {navItems.map(({ to, label, exact }) => (
-          <Link
-            key={to}
-            to={to}
-            activeOptions={{ exact: Boolean(exact) }}
-            className="rounded-md px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            activeProps={{ className: "text-foreground font-medium bg-accent" }}
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <div className="hidden min-w-0 items-center gap-2 text-xs text-muted-foreground lg:flex">
+        <span className="font-medium text-foreground">Aurumi Guide Studio</span>
+        <span aria-hidden>·</span>
+        <span>Help &amp; documentation authoring, management and knowledge source system</span>
+      </div>
       <div className="flex items-center gap-3">
         <span className="hidden text-xs text-muted-foreground sm:inline">
           Workspace: <span className="text-foreground">Aurumi Core</span>
