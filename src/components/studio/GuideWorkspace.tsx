@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { guideCommands } from "@/commands/guide-commands";
 import { useGuideCommand } from "@/commands/useGuideCommand";
 import { REFERENCE_KIND_LABELS, refKey } from "@/domain/external-ref";
+import { useDirtyNavigationGuard } from "@/hooks/useDirtyNavigationGuard";
 import { INITIAL_VERSION_NUMBER } from "@/domain/guide-editing";
 import {
   GUIDE_TYPE_LABELS,
