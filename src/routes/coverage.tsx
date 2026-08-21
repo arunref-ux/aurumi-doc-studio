@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CoverageBucket } from "@/domain/types";
-import { guideQueries } from "@/lib/queries";
+import { coverageQueries } from "@/lib/queries";
 
 export const Route = createFileRoute("/coverage")({
   head: () => ({
@@ -29,14 +29,14 @@ export const Route = createFileRoute("/coverage")({
 });
 
 function CoveragePage() {
-  const coverage = useQuery(guideQueries.coverage());
+  const coverage = useQuery(coverageQueries.summary());
 
   return (
     <div className="space-y-5">
       <PageHeader
         eyebrow="Insights"
         title="Documentation Coverage"
-        description="Coverage is calculated live from source-system hierarchies and Guide Studio associations. Archived guides do not count as coverage."
+        description="Coverage is composed live from source-system provider hierarchies and Guide Studio guide versions. Published means at least one published version; in progress means authored but not yet published; archived versions never count as coverage."
         actions={
           <Button variant="outline" size="sm" onClick={() => coverage.refetch()}>
             <RefreshCw className="size-3.5" /> Refresh
@@ -87,38 +87,79 @@ function CoveragePanel({
   source: string;
   entity: string;
 }) {
-  const pct = bucket.total === 0 ? 0 : Math.round((bucket.covered / bucket.total) * 100);
+  const publishedPct = bucket.total === 0 ? 0 : Math.round((bucket.published / bucket.total) * 100);
+  const notStarted = bucket.entities.filter((item) => item.state === "not-started");
+  const inProgress = bucket.entities.filter((item) => item.state === "in-progress");
+
   return (
     <section className="panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-base font-semibold">{bucket.label}</h2>
           <p className="text-xs text-muted-foreground">
-            Owned by {source} · {entity} entities referenced by guides
+            Owned by {source} · {entity} entities referenced by guide versions
           </p>
         </div>
         <div className="text-right">
-          <p className="text-3xl font-semibold tabular-nums">{pct}%</p>
+          <p className="text-3xl font-semibold tabular-nums">{publishedPct}%</p>
           <p className="text-xs text-muted-foreground">
-            {bucket.covered} of {bucket.total} documented
+            {bucket.published} of {bucket.total} with published coverage
           </p>
         </div>
       </div>
-      <Progress value={pct} className="mt-4 h-2" />
-      {bucket.uncovered > 0 ? (
+      <Progress value={publishedPct} className="mt-4 h-2" />
+      <dl className="mt-4 grid grid-cols-3 gap-3 text-xs">
+        <div>
+          <dt className="text-muted-foreground">Published coverage</dt>
+          <dd className="text-lg font-semibold tabular-nums text-status-published-foreground">
+            {bucket.published}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">In progress (authoring only)</dt>
+          <dd className="text-lg font-semibold tabular-nums text-status-review-foreground">
+            {bucket.inProgress}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Not started</dt>
+          <dd className="text-lg font-semibold tabular-nums">{bucket.notStarted}</dd>
+        </div>
+      </dl>
+
+      {inProgress.length > 0 ? (
         <div className="mt-4">
-          <p className="label-caps mb-2">{bucket.uncovered} without guide coverage</p>
+          <p className="label-caps mb-2">{inProgress.length} documented but unpublished</p>
           <ul className="flex flex-wrap gap-1.5">
-            {bucket.uncoveredExamples.map((name) => (
+            {inProgress.map((item) => (
               <li
-                key={name}
+                key={`${item.ref.source}-${item.ref.kind}-${item.ref.externalId}`}
                 className="rounded-md border border-status-review bg-status-review px-2 py-1 text-xs text-status-review-foreground"
               >
-                {name}
+                {item.name}
               </li>
             ))}
           </ul>
-          <Link to="/sources" className="mt-3 inline-block text-xs font-medium text-primary hover:underline">
+        </div>
+      ) : null}
+
+      {notStarted.length > 0 ? (
+        <div className="mt-4">
+          <p className="label-caps mb-2">{notStarted.length} without any guide coverage</p>
+          <ul className="flex flex-wrap gap-1.5">
+            {notStarted.map((item) => (
+              <li
+                key={`${item.ref.source}-${item.ref.kind}-${item.ref.externalId}`}
+                className="rounded-md border border-border bg-muted px-2 py-1 text-xs text-muted-foreground"
+              >
+                {item.name}
+              </li>
+            ))}
+          </ul>
+          <Link
+            to="/sources"
+            className="mt-3 inline-block text-xs font-medium text-primary hover:underline"
+          >
             Inspect in Sources
           </Link>
         </div>
