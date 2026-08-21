@@ -10,7 +10,12 @@ import { refKey, type ExternalEntityReference } from "@/domain/external-ref";
 import { type CoverageState } from "@/domain/types";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/format";
-import { aiStudioQueries, connectorQueries, devHarmonyQueries, guideQueries } from "@/lib/queries";
+import {
+  aiStudioQueries,
+  connectorQueries,
+  coverageQueries,
+  devHarmonyQueries,
+} from "@/lib/queries";
 
 export const Route = createFileRoute("/sources")({
   head: () => ({
