@@ -198,6 +198,15 @@ const seeds: GuideSeed[] = [
     createdAt: "2026-05-14T08:10:00Z",
     updatedAt: "2026-05-29T14:05:00Z",
     publishedAt: null,
+    // v1.0 shipped previously; the current v0.2 draft is the next revision.
+    history: [
+      {
+        versionNumber: "1.0",
+        status: "published",
+        publishedAt: "2025-11-03T09:00:00Z",
+        at: "2025-11-03T09:00:00Z",
+      },
+    ],
     associations: [
       app("app-employee-management", "Employee Management"),
       feature("feature-manage-employee-roles", "Manage Employee Roles", "app-employee-management"),
@@ -377,6 +386,8 @@ const seeds: GuideSeed[] = [
     createdAt: "2024-11-11T08:00:00Z",
     updatedAt: "2026-02-18T10:30:00Z",
     publishedAt: "2025-01-06T09:00:00Z",
+    // Current version is archived, but the approved v0.9 still counts as authoring coverage.
+    history: [{ versionNumber: "0.9", status: "approved", at: "2024-12-20T08:00:00Z" }],
     associations: [
       app("app-deals", "Deals"),
       feature("feature-delete-deal", "Delete Deal", "app-deals"),
@@ -391,17 +402,30 @@ function slugify(title: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-export const seedGuideVersions: GuideVersion[] = seeds.map((seed) => ({
-  id: `${seed.id}-v${seed.currentVersion}`,
-  guideId: seed.id,
-  versionNumber: seed.currentVersion,
-  status: seed.status,
-  createdAt: seed.createdAt,
-  createdBy: seed.owner,
-  updatedAt: seed.updatedAt,
-  updatedBy: seed.owner,
-  publishedAt: seed.publishedAt ?? null,
-}));
+export const seedGuideVersions: GuideVersion[] = seeds.flatMap((seed) => [
+  ...(seed.history ?? []).map((entry) => ({
+    id: `${seed.id}-v${entry.versionNumber}`,
+    guideId: seed.id,
+    versionNumber: entry.versionNumber,
+    status: entry.status,
+    createdAt: seed.createdAt,
+    createdBy: seed.owner,
+    updatedAt: entry.at,
+    updatedBy: seed.owner,
+    publishedAt: entry.publishedAt ?? null,
+  })),
+  {
+    id: `${seed.id}-v${seed.currentVersion}`,
+    guideId: seed.id,
+    versionNumber: seed.currentVersion,
+    status: seed.status,
+    createdAt: seed.createdAt,
+    createdBy: seed.owner,
+    updatedAt: seed.updatedAt,
+    updatedBy: seed.owner,
+    publishedAt: seed.publishedAt ?? null,
+  },
+]);
 
 export const seedGuides: Guide[] = seeds.map((seed) => ({
   id: seed.id,
