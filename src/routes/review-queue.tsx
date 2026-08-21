@@ -1,10 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
 import { PageHeader } from "@/components/studio/PageHeader";
 import { StatusBadge } from "@/components/studio/StatusBadge";
-import { GUIDE_STATUS_LABELS, GUIDE_STATUS_ORDER, GUIDE_TYPE_LABELS } from "@/domain/types";
+import {
+  GUIDE_STATUS_LABELS,
+  GUIDE_STATUS_ORDER,
+  GUIDE_TYPE_LABELS,
+  type Guide,
+} from "@/domain/types";
 import { formatDate, relativeDays } from "@/lib/format";
 import { guideQueries } from "@/lib/queries";
 
@@ -81,9 +86,6 @@ function ReviewQueuePage() {
   );
 }
 
-type GuideListQuery = ReturnType<typeof useQuery<Awaited<ReturnType<typeof fakeList>>>>;
-declare function fakeList(): Promise<never>;
-
 function QueueSection({
   title,
   description,
@@ -91,16 +93,9 @@ function QueueSection({
 }: {
   title: string;
   description: string;
-  query: ReturnType<typeof useQuery> & { data?: unknown };
+  query: UseQueryResult<Guide[], Error>;
 }) {
-  const guides = (query.data ?? []) as {
-    id: string;
-    title: string;
-    owner: string;
-    updatedAt: string;
-    status: Parameters<typeof StatusBadge>[0]["status"];
-    guideType: keyof typeof GUIDE_TYPE_LABELS;
-  }[];
+  const guides = query.data ?? [];
 
   return (
     <section className="panel">
@@ -109,7 +104,7 @@ function QueueSection({
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
       {query.isError ? (
-        <ErrorState message={(query.error as Error)?.message} onRetry={() => query.refetch()} />
+        <ErrorState message={query.error?.message} onRetry={() => query.refetch()} />
       ) : query.isPending ? (
         <LoadingRows rows={3} />
       ) : guides.length === 0 ? (
@@ -141,5 +136,3 @@ function QueueSection({
     </section>
   );
 }
-
-export type { GuideListQuery };

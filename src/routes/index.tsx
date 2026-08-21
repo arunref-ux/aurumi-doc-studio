@@ -175,9 +175,9 @@ function KpiCard({
   emphasis,
 }: {
   label: string;
-  value?: number;
-  loading?: boolean;
-  emphasis?: boolean;
+  value?: number | undefined;
+  loading?: boolean | undefined;
+  emphasis?: boolean | undefined;
 }) {
   return (
     <div className="panel px-4 py-3">
@@ -235,7 +235,13 @@ function CoverageCard({ bucket, source }: { bucket: CoverageBucket; source: stri
   );
 }
 
-function AttentionList({ guides, features }: { guides: Guide[]; features?: CoverageBucket }) {
+function AttentionList({
+  guides,
+  features,
+}: {
+  guides: Guide[];
+  features?: CoverageBucket | undefined;
+}) {
   const inReview = guides.filter((guide) => guide.status === "in-review");
   const staleDrafts = guides.filter(
     (guide) => guide.status === "draft" && daysSince(guide.updatedAt) > 45,
