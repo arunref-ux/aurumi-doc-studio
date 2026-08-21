@@ -262,26 +262,42 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
                 />
               </div>
 
+              {/*
+                Guide type is selected once at creation. In edit mode it is
+                read-only: the update command and provider contract do not
+                accept guideType at all in Build 2A.1.
+              */}
               <div className="space-y-1.5">
                 <Label>Guide type</Label>
-                <Select
-                  value={draft.guideType}
-                  onValueChange={(value) => {
-                    setSaveState("idle");
-                    setDraft({ ...draft, guideType: value as GuideType });
-                  }}
-                >
-                  <SelectTrigger className="h-9 w-64">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(GUIDE_TYPE_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {guide ? (
+                  <p className="flex h-9 w-64 items-center rounded-md border border-dashed border-border bg-muted/40 px-3 text-sm">
+                    {GUIDE_TYPE_LABELS[guide.guideType]}
+                  </p>
+                ) : (
+                  <Select
+                    value={draft.guideType}
+                    onValueChange={(value) => {
+                      setSaveState("idle");
+                      setDraft({ ...draft, guideType: value as GuideType });
+                    }}
+                  >
+                    <SelectTrigger className="h-9 w-64">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(GUIDE_TYPE_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {guide ? (
+                  <p className="text-xs text-muted-foreground">
+                    Guide type is not editable in this build.
+                  </p>
+                ) : null}
               </div>
             </section>
 
