@@ -85,7 +85,7 @@ export const removeGuideAssociationCommand = defineCommand<RemoveGuideAssociatio
 /** Later-build lifecycle mutations — authorization policy already centralized. */
 export const guideCommands = {
   createGuide: createGuideCommand,
-  updateGuide: updateGuideCommand,
+  updateGuideDraft: updateGuideDraftCommand,
   addAssociation: addGuideAssociationCommand,
   removeAssociation: removeGuideAssociationCommand,
   submitForReview: definePlannedCommand<{ guideId: string }>("guide.action.submit_for_review"),
