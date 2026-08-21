@@ -35,10 +35,13 @@ import {
 /**
  * Guide authoring workspace (Build 2A.1).
  *
- * Editable surface: Title, Summary, Guide type and Associations. Every write
- * leaves through the command bus, which authorizes the action centrally before
- * the Guide Studio provider is reached. Version number and workflow status are
- * system-controlled and displayed read-only.
+ * Editable surface when editing a draft: Title, Summary and Associations only.
+ * Guide type is chosen once at creation and is read-only afterwards — the
+ * update command/provider contract does not accept it at all.
+ *
+ * Every write leaves through the command bus, which authorizes the action
+ * centrally before the Guide Studio provider is reached. Version number and
+ * workflow status are system-controlled and displayed read-only.
  */
 
 type SaveState = "idle" | "saving" | "saved" | "error";
