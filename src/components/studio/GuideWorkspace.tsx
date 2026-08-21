@@ -82,9 +82,7 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
   const { user } = useAuthorization();
 
   const createGuide = useGuideCommand(guideCommands.createGuide);
-  const updateGuide = useGuideCommand(guideCommands.updateGuide);
-  const addAssociation = useGuideCommand(guideCommands.addAssociation);
-  const removeAssociation = useGuideCommand(guideCommands.removeAssociation);
+  const updateGuideDraft = useGuideCommand(guideCommands.updateGuideDraft);
 
   const baseline = useMemo<Draft>(() => (guide ? draftFromGuide(guide) : EMPTY_DRAFT), [guide]);
   const [draft, setDraft] = useState<Draft>(baseline);
@@ -96,27 +94,26 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
   }, [baseline]);
 
   const dirty = useMemo(
-    () => JSON.stringify(draft) !== JSON.stringify(baseline),
-    [draft, baseline],
+    () =>
+      saveState !== "saving" &&
+      saveState !== "saved" &&
+      JSON.stringify(draft) !== JSON.stringify(baseline),
+    [draft, baseline, saveState],
   );
 
-  // Do not lose unsaved work silently on reload / tab close.
-  useEffect(() => {
-    if (!dirty) return;
-    const handler = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [dirty]);
+  /**
+   * One guard for every exit path: router navigation (sidebar, Guide Library,
+   * another guide, any internal route change, browser back/forward) plus
+   * browser/tab unload. The workspace Back control routes through the same
+   * mechanism because it is an ordinary navigation.
+   */
+  const guard = useDirtyNavigationGuard(dirty);
 
   const leave = useCallback(() => {
-    if (dirty && !window.confirm("You have unsaved changes. Leave without saving?")) return;
     void navigate(
       guide ? { to: "/library/$guideId", params: { guideId: guide.id } } : { to: "/library" },
     );
-  }, [dirty, guide, navigate]);
+  }, [guide, navigate]);
 
   const existingKeys = draft.associations.map((association) => refKey(association.ref));
 
