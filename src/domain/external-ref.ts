@@ -98,6 +98,21 @@ export function assertValidReference(ref: {
   }
 }
 
+/**
+ * Validating factory for any guide reference target (external or internal).
+ * Seed data, imports and hydration MUST build references through this instead
+ * of asserting types, so unsafe casts cannot bypass integrity rules.
+ */
+export function guideRef(
+  source: string,
+  kind: string,
+  externalId: string,
+): GuideReferenceTarget {
+  const candidate = { source, kind, externalId };
+  assertValidReference(candidate);
+  return candidate;
+}
+
 export function externalRef(
   source: ExternalEntityReference["source"],
   kind: ExternalEntityKind,

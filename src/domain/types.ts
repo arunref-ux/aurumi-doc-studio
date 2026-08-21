@@ -133,13 +133,18 @@ export const GUIDE_STATUS_ORDER: GuideVersionStatus[] = [
   "archived",
 ];
 
-/** Version states that constitute authoring coverage (archived excluded). */
-export const AUTHORING_COVERAGE_STATUSES: GuideVersionStatus[] = [
-  "draft",
-  "in-review",
-  "approved",
-  "published",
-];
+/**
+ * Lifecycle coverage rules live in `@/domain/guide-lifecycle` and are
+ * re-exported here for convenience. Never re-derive them inline.
+ */
+export {
+  AUTHORING_COVERAGE_STATUSES,
+  PUBLISHED_COVERAGE_STATUSES,
+  guideProvidesAuthoringCoverage,
+  guideProvidesPublishedCoverage,
+  providesAuthoringCoverage,
+  providesPublishedCoverage,
+} from "./guide-lifecycle";
 
 export type AssociationKind = ReferenceKind;
 
@@ -222,7 +227,7 @@ export interface GuideStatusCounts {
  */
 export interface CoverageFact {
   ref: GuideReferenceTarget;
-  /** At least one non-archived GuideVersion associated. */
+  /** Any associated guide has any GuideVersion that provides authoring coverage. */
   authoringCoverage: boolean;
   /** At least one published GuideVersion associated. */
   publishedCoverage: boolean;

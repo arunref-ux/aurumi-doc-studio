@@ -1,7 +1,15 @@
 import { seedActivity, seedGuideVersions, seedGuides } from "@/data/seed/guides";
-import { assertValidReference, refKey } from "@/domain/external-ref";
 import {
-  AUTHORING_COVERAGE_STATUSES,
+  assertAssociationValid,
+  validateGuideAssociations,
+  validateGuideVersions,
+} from "@/domain/association-rules";
+import { refKey } from "@/domain/external-ref";
+import {
+  guideProvidesAuthoringCoverage,
+  guideProvidesPublishedCoverage,
+} from "@/domain/guide-lifecycle";
+import {
   GUIDE_STATUS_ORDER,
   GUIDE_TYPE_LABELS,
   type CoverageFact,
@@ -21,6 +29,14 @@ import { clone, simulateRequest } from "./latency";
  */
 const guides: Guide[] = seedGuides.map((guide) => ({ ...guide }));
 const versions: GuideVersion[] = seedGuideVersions.map((version) => ({ ...version }));
+
+/**
+ * Store initialization integrity gate. Seed, imported and future hydrated data
+ * pass through exactly the same rules as runtime writes, so invalid source/kind
+ * combinations or duplicate composite associations fail early and loudly.
+ */
+validateGuideAssociations(guides);
+validateGuideVersions(guides, versions);
 
 function versionsOf(guideId: string): GuideVersion[] {
   return versions.filter((version) => version.guideId === guideId);
@@ -84,17 +100,17 @@ function matches(guide: GuideWithVersion, query: GuideQuery): boolean {
 }
 
 /**
- * Coverage facts: composite-key indexed, derived from GuideVersion lifecycle.
- * Authoring coverage = any non-archived version. Published coverage = any
- * published version.
+ * Coverage facts: composite-key indexed, derived from ALL GuideVersions of each
+ * associated guide (never only `currentVersionId`). Lifecycle rules come from
+ * the centralized helpers in `@/domain/guide-lifecycle`.
  */
 function coverageFacts(): CoverageFact[] {
   const index = new Map<string, CoverageFact>();
 
   for (const guide of guides) {
-    const status = currentVersion(guide).status;
-    const authoring = AUTHORING_COVERAGE_STATUSES.includes(status);
-    const published = versionsOf(guide.id).some((version) => version.status === "published");
+    const guideVersions = versionsOf(guide.id);
+    const authoring = guideProvidesAuthoringCoverage(guideVersions);
+    const published = guideProvidesPublishedCoverage(guideVersions);
     if (!authoring && !published) continue;
 
     for (const association of guide.associations) {
@@ -184,16 +200,10 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
         const guide = guides.find((item) => item.id === input.guideId);
         if (!guide) throw new Error(`Unknown guide: ${input.guideId}`);
 
-        // Domain boundary validation: valid source/kind combination…
-        assertValidReference(input.ref);
-
-        // …and composite uniqueness of guideId + source + kind + externalId.
-        const key = refKey(input.ref);
-        if (guide.associations.some((association) => refKey(association.ref) === key)) {
-          throw new Error(
-            `Duplicate association: ${key} is already associated with guide ${guide.id}.`,
-          );
-        }
+        // Shared domain rules: valid source/kind combination and composite
+        // uniqueness of guideId + source + kind + externalId. Identical to the
+        // initialization gate above.
+        assertAssociationValid({ guideId: guide.id, ref: input.ref }, guide.associations);
 
         const association: GuideAssociation = {
           id: `${guide.id}-assoc-${guide.associations.length + 1}`,
