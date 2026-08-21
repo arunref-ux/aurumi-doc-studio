@@ -134,6 +134,45 @@ function coverageFacts(): CoverageFact[] {
   return Array.from(index.values());
 }
 
+/* ------------------------------------------------------------------ */
+/* Mutation helpers                                                    */
+/* ------------------------------------------------------------------ */
+
+let sequence = 0;
+function nextId(prefix: string): string {
+  sequence += 1;
+  return `${prefix}-${Date.now().toString(36)}-${sequence}`;
+}
+
+/** Guide ids stay slug-derived and unique across the store. */
+function uniqueGuideId(title: string): string {
+  const base = slugifyTitle(title) || "guide";
+  let candidate = `guide-${base}`;
+  let suffix = 2;
+  while (guides.some((guide) => guide.id === candidate)) {
+    candidate = `guide-${base}-${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+}
+
+function uniqueSlug(title: string, guideId: string): string {
+  const base = slugifyTitle(title) || guideId;
+  let candidate = base;
+  let suffix = 2;
+  while (guides.some((guide) => guide.slug === candidate && guide.id !== guideId)) {
+    candidate = `${base}-${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+}
+
+function requireGuide(guideId: string): Guide {
+  const guide = guides.find((item) => item.id === guideId);
+  if (!guide) throw new Error(`Unknown guide: ${guideId}`);
+  return guide;
+}
+
 export const mockGuideStudioProvider: GuideStudioProvider = {
   listGuides: (query = {}) =>
     simulateRequest(
@@ -163,7 +202,7 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
     simulateRequest(
       () =>
         clone(
-          seedActivity
+          activity
             .filter((entry) => entry.guideId === guideId)
             .sort((a, b) => b.at.localeCompare(a.at)),
         ),
@@ -187,7 +226,7 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
 
   getRecentActivity: (limit = 8) =>
     simulateRequest(
-      () => clone([...seedActivity].sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit)),
+      () => clone([...activity].sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit)),
       { label: "Guide Studio Activity API" },
     ),
 
@@ -197,8 +236,8 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
   createAssociation: (input: CreateAssociationInput) =>
     simulateRequest(
       () => {
-        const guide = guides.find((item) => item.id === input.guideId);
-        if (!guide) throw new Error(`Unknown guide: ${input.guideId}`);
+        const guide = requireGuide(input.guideId);
+        assertVersionEditable(guide.id, currentVersion(guide));
 
         // Shared domain rules: valid source/kind combination and composite
         // uniqueness of guideId + source + kind + externalId. Identical to the
@@ -206,7 +245,7 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
         assertAssociationValid({ guideId: guide.id, ref: input.ref }, guide.associations);
 
         const association: GuideAssociation = {
-          id: `${guide.id}-assoc-${guide.associations.length + 1}`,
+          id: nextId(`${guide.id}-assoc`),
           guideId: guide.id,
           ref: input.ref,
           label: input.label,
@@ -217,4 +256,135 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
       },
       { label: "Guide Studio Association API" },
     ),
+
+  removeAssociation: (input: RemoveAssociationInput) =>
+    simulateRequest(
+      () => {
+        const guide = requireGuide(input.guideId);
+        assertVersionEditable(guide.id, currentVersion(guide));
+        const key = refKey(input.ref);
+        const next = guide.associations.filter(
+          (association) => refKey(association.ref) !== key,
+        );
+        if (next.length === guide.associations.length) {
+          throw new Error(`Association ${key} is not present on guide ${guide.id}.`);
+        }
+        guide.associations = next;
+      },
+      { label: "Guide Studio Association API" },
+    ),
+
+  /**
+   * Atomic Guide + initial GuideVersion creation.
+   *
+   * Every record is built and validated in a staging area first; the store is
+   * only mutated once all domain rules pass, so a failure can never leave an
+   * orphaned Guide or GuideVersion behind (mock equivalent of a transaction).
+   */
+  createGuide: (input: CreateGuideInput) =>
+    simulateRequest(
+      () => {
+        assertGuideMetadataValid(input);
+
+        const title = input.title.trim();
+        const now = new Date().toISOString();
+        const guideId = uniqueGuideId(title);
+        const versionId = `${guideId}-v${INITIAL_VERSION_NUMBER}`;
+
+        const stagedAssociations: GuideAssociation[] = [];
+        for (const draft of input.associations ?? []) {
+          // Same shared rules as initialization and runtime association writes.
+          assertAssociationValid({ guideId, ref: draft.ref }, stagedAssociations);
+          stagedAssociations.push({
+            id: nextId(`${guideId}-assoc`),
+            guideId,
+            ref: draft.ref,
+            label: draft.label,
+            ...(draft.parentExternalId ? { parentExternalId: draft.parentExternalId } : {}),
+          });
+        }
+
+        const stagedGuide: Guide = {
+          id: guideId,
+          title,
+          slug: uniqueSlug(title, guideId),
+          summary: input.summary.trim(),
+          guideType: input.guideType,
+          currentVersionId: versionId,
+          owner: input.actor,
+          createdAt: now,
+          updatedAt: now,
+          associations: stagedAssociations,
+        };
+
+        const stagedVersion: GuideVersion = {
+          id: versionId,
+          guideId,
+          versionNumber: INITIAL_VERSION_NUMBER,
+          status: INITIAL_VERSION_STATUS,
+          createdAt: now,
+          createdBy: input.actor,
+          updatedAt: now,
+          updatedBy: input.actor,
+          publishedAt: null,
+        };
+
+        // Full-store integrity gate before commit: either both records are
+        // valid together, or nothing is written.
+        const candidateGuides = [...guides, stagedGuide];
+        const candidateVersions = [...versions, stagedVersion];
+        validateGuideAssociations(candidateGuides);
+        validateGuideVersions(candidateGuides, candidateVersions);
+
+        guides.push(stagedGuide);
+        versions.push(stagedVersion);
+        activity.push({
+          id: nextId(`${guideId}-activity`),
+          guideId,
+          actor: input.actor,
+          action: "Draft created",
+          detail: `Version ${INITIAL_VERSION_NUMBER}`,
+          at: now,
+        });
+
+        return clone(withVersion(stagedGuide));
+      },
+      { label: "Guide Studio Guide API" },
+    ),
+
+  updateGuide: (input: UpdateGuideInput) =>
+    simulateRequest(
+      () => {
+        const guide = requireGuide(input.guideId);
+        const version = currentVersion(guide);
+        assertVersionEditable(guide.id, version);
+        assertGuideMetadataValid(input);
+
+        const now = new Date().toISOString();
+        const title = input.title.trim();
+        guide.title = title;
+        guide.slug = uniqueSlug(title, guide.id);
+        guide.summary = input.summary.trim();
+        guide.guideType = input.guideType;
+        guide.updatedAt = now;
+
+        // GuideVersion remains the lifecycle authority: status is untouched,
+        // only its edit provenance moves forward.
+        version.updatedAt = now;
+        version.updatedBy = input.actor;
+
+        activity.push({
+          id: nextId(`${guide.id}-activity`),
+          guideId: guide.id,
+          actor: input.actor,
+          action: "Draft saved",
+          detail: `Version ${version.versionNumber}`,
+          at: now,
+        });
+
+        return clone(withVersion(guide));
+      },
+      { label: "Guide Studio Guide API" },
+    ),
 };
+
