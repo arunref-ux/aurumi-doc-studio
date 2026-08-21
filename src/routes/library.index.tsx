@@ -118,7 +118,10 @@ function LibraryPage() {
             value={status}
             onChange={(value) => setStatus(value as GuideStatus | typeof ALL)}
             placeholder="All statuses"
-            options={GUIDE_STATUS_ORDER.map((item) => ({ value: item, label: GUIDE_STATUS_LABELS[item] }))}
+            options={GUIDE_STATUS_ORDER.map((item) => ({
+              value: item,
+              label: GUIDE_STATUS_LABELS[item],
+            }))}
           />
           <FilterSelect
             value={guideType}
@@ -136,7 +139,10 @@ function LibraryPage() {
             value={topicExternalId}
             onChange={setTopicExternalId}
             placeholder="All AI topics"
-            options={(topics.data ?? []).map((topic) => ({ value: topic.externalId, label: topic.name }))}
+            options={(topics.data ?? []).map((topic) => ({
+              value: topic.externalId,
+              label: topic.name,
+            }))}
           />
           <FilterSelect
             value={connectorExternalId}
@@ -198,7 +204,9 @@ function LibraryPage() {
                       >
                         {guide.title}
                       </Link>
-                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{guide.summary}</p>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                        {guide.summary}
+                      </p>
                     </td>
                     <td className="px-4 py-2.5 text-xs text-muted-foreground">
                       {GUIDE_TYPE_LABELS[guide.guideType]}
@@ -206,7 +214,9 @@ function LibraryPage() {
                     <td className="px-4 py-2.5">
                       <StatusBadge status={guide.status} />
                     </td>
-                    <td className="px-4 py-2.5 font-mono text-xs tabular-nums">{guide.currentVersion}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs tabular-nums">
+                      {guide.currentVersion}
+                    </td>
                     <td className="px-4 py-2.5">
                       <PrimaryContext guide={guide} />
                     </td>

@@ -57,7 +57,10 @@ function ReviewQueuePage() {
         <h2 className="label-caps mb-2.5">Status summary</h2>
         {counts.isError ? (
           <div className="panel">
-            <ErrorState message={(counts.error as Error)?.message} onRetry={() => counts.refetch()} />
+            <ErrorState
+              message={(counts.error as Error)?.message}
+              onRetry={() => counts.refetch()}
+            />
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -65,7 +68,7 @@ function ReviewQueuePage() {
               <div key={status} className="panel px-4 py-3">
                 <p className="label-caps">{GUIDE_STATUS_LABELS[status]}</p>
                 <p className="mt-1 text-2xl font-semibold tabular-nums">
-                  {counts.isPending ? "—" : counts.data?.byStatus[status] ?? 0}
+                  {counts.isPending ? "—" : (counts.data?.byStatus[status] ?? 0)}
                 </p>
               </div>
             ))}
@@ -73,11 +76,7 @@ function ReviewQueuePage() {
         )}
       </section>
 
-      <QueueSection
-        title="In review"
-        description="Awaiting reviewer sign-off."
-        query={pending}
-      />
+      <QueueSection title="In review" description="Awaiting reviewer sign-off." query={pending} />
       <QueueSection
         title="Approved, awaiting publish"
         description="Content approved; publishing is not available in Build 1."

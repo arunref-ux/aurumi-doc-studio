@@ -55,9 +55,7 @@ export function UserSwitcher() {
         <div className="px-2 py-1.5 text-xs">
           <p className="font-medium">{user.name}</p>
           <p className="text-muted-foreground">Base Role: {user.baseRole}</p>
-          <p className="text-muted-foreground">
-            Permission Profile: {user.permissionProfileLabel}
-          </p>
+          <p className="text-muted-foreground">Permission Profile: {user.permissionProfileLabel}</p>
           <ul className="mt-1.5 space-y-0.5">
             {isGuideAdmin() ? (
               <li className="flex items-center gap-1.5 text-foreground">
@@ -66,8 +64,7 @@ export function UserSwitcher() {
             ) : (
               user.effectivePermissions.map((permission) => (
                 <li key={permission} className="font-mono text-[0.6875rem] text-muted-foreground">
-                  {permission}{" "}
-                  <span className="font-sans">· {PERMISSION_LABELS[permission]}</span>
+                  {permission} <span className="font-sans">· {PERMISSION_LABELS[permission]}</span>
                 </li>
               ))
             )}

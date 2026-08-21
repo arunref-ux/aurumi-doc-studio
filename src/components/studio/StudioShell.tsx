@@ -60,7 +60,9 @@ export function StudioShell({ children }: { children: ReactNode }) {
 
         <div className="border-t border-sidebar-border px-5 py-4 text-[0.6875rem] leading-relaxed text-sidebar-muted">
           <p className="font-medium text-sidebar-foreground">Build 1 · Prototype</p>
-          <p>Simulated source providers. Authoring, review and publishing arrive in later builds.</p>
+          <p>
+            Simulated source providers. Authoring, review and publishing arrive in later builds.
+          </p>
         </div>
       </aside>
 
