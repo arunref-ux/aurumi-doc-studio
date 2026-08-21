@@ -1,3 +1,4 @@
+import { guideRef } from "@/domain/external-ref";
 import type {
   Guide,
   GuideActivityEntry,
@@ -25,11 +26,9 @@ interface GuideSeed {
   associations: AssocSpec[];
 }
 
-const ref = (
-  source: GuideReferenceTarget["source"],
-  kind: GuideReferenceTarget["kind"],
-  externalId: string,
-) => ({ source, kind, externalId }) as GuideReferenceTarget;
+/** Validated at construction time — no unsafe type assertions. */
+const ref = (source: string, kind: string, externalId: string): GuideReferenceTarget =>
+  guideRef(source, kind, externalId);
 
 const app = (externalId: string, label: string): AssocSpec => ({
   ref: ref("devharmony", "app", externalId),
