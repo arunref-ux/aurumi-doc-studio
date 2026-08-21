@@ -93,17 +93,20 @@ export const guideQueries = {
     }),
 };
 
+/** Coverage fans out across every provider, so it tolerates more retries. */
+const composedRetry = 3;
+
 export const coverageQueries = {
   summary: () =>
     queryOptions({
       queryKey: ["coverage", "summary"],
       queryFn: () => coverageService.getCoverageSummary(),
-      retry,
+      retry: composedRetry,
     }),
   stateIndex: () =>
     queryOptions({
       queryKey: ["coverage", "state-index"],
       queryFn: () => coverageService.getCoverageStateIndex(),
-      retry,
+      retry: composedRetry,
     }),
 };
