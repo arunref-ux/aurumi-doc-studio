@@ -68,8 +68,8 @@ function GuideDetailPage() {
   }
 
   const data = guide.data;
-  const featureAssocs = data.associations.filter((assoc) => assoc.kind === "feature");
-  const relatedGuides = data.associations.filter((assoc) => assoc.kind === "related-guide");
+  const featureAssocs = data.associations.filter((assoc) => assoc.ref.kind === "feature");
+  const relatedGuides = data.associations.filter((assoc) => assoc.ref.kind === "related-guide");
 
   return (
     <div className="space-y-5">
@@ -158,7 +158,7 @@ function GuideDetailPage() {
                 featureAssocs.map((assoc) => (
                   <FeatureVersions
                     key={assoc.id}
-                    featureId={assoc.externalId}
+                    featureId={assoc.ref.externalId}
                     label={assoc.label}
                   />
                 ))
@@ -181,7 +181,7 @@ function GuideDetailPage() {
                   <li key={assoc.id} className="px-4 py-2.5">
                     <Link
                       to="/library/$guideId"
-                      params={{ guideId: assoc.externalId }}
+                      params={{ guideId: assoc.ref.externalId }}
                       className="text-sm font-medium hover:underline"
                     >
                       {assoc.label}
@@ -240,12 +240,12 @@ function AssocGroup({
   title,
   trail,
 }: {
-  guide: Guide;
+  guide: GuideWithVersion;
   kind: AssociationKind;
   title: string;
   trail: string;
 }) {
-  const items = guide.associations.filter((assoc) => assoc.kind === kind);
+  const items = guide.associations.filter((assoc) => assoc.ref.kind === kind);
   return (
     <div className="px-4 py-3">
       <p className="label-caps mb-2">{title}</p>
@@ -270,13 +270,13 @@ function AssocChip({ assoc, trail }: { assoc: GuideAssociation; trail: string })
     : null;
   return (
     <span className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5">
-      <SourceChip source={assoc.source} />
+      <SourceChip source={assoc.ref.source} />
       <span className="text-xs text-muted-foreground">
         {trail}
         {parentLabel ? ` → ${titleCase(parentLabel)}` : ""} →
       </span>
       <span className="text-sm font-medium">{assoc.label}</span>
-      <span className="font-mono text-[0.625rem] text-muted-foreground">{assoc.externalId}</span>
+      <span className="font-mono text-[0.625rem] text-muted-foreground">{assoc.ref.externalId}</span>
     </span>
   );
 }

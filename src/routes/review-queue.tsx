@@ -125,7 +125,7 @@ function QueueSection({
                   {GUIDE_TYPE_LABELS[guide.guideType]} · {guide.owner}
                 </p>
               </div>
-              <StatusBadge status={guide.status} />
+              <StatusBadge status={guide.currentVersion.status} />
               <div className="flex items-center gap-1.5">
                 <ActionButton action="guide.action.review" size="sm" variant="ghost" />
                 <ActionButton action="guide.action.approve" size="sm" variant="ghost" />

@@ -212,10 +212,10 @@ function LibraryPage() {
                       {GUIDE_TYPE_LABELS[guide.guideType]}
                     </td>
                     <td className="px-4 py-2.5">
-                      <StatusBadge status={guide.status} />
+                      <StatusBadge status={guide.currentVersion.status} />
                     </td>
                     <td className="px-4 py-2.5 font-mono text-xs tabular-nums">
-                      {guide.currentVersion}
+                      v{guide.currentVersion.versionNumber}
                     </td>
                     <td className="px-4 py-2.5">
                       <PrimaryContext guide={guide} />
@@ -235,18 +235,18 @@ function LibraryPage() {
   );
 }
 
-function PrimaryContext({ guide }: { guide: Guide }) {
+function PrimaryContext({ guide }: { guide: GuideWithVersion }) {
   const primary =
-    guide.associations.find((assoc) => assoc.kind === "feature") ??
-    guide.associations.find((assoc) => assoc.kind === "capability") ??
-    guide.associations.find((assoc) => assoc.kind === "app") ??
-    guide.associations.find((assoc) => assoc.kind === "connector") ??
-    guide.associations.find((assoc) => assoc.kind === "topic");
+    guide.associations.find((assoc) => assoc.ref.kind === "feature") ??
+    guide.associations.find((assoc) => assoc.ref.kind === "capability") ??
+    guide.associations.find((assoc) => assoc.ref.kind === "app") ??
+    guide.associations.find((assoc) => assoc.ref.kind === "connector") ??
+    guide.associations.find((assoc) => assoc.ref.kind === "topic");
 
   if (!primary) {
     return <span className="text-xs text-muted-foreground">Product-wide</span>;
   }
-  return <SourceChip source={primary.source}>{primary.label}</SourceChip>;
+  return <SourceChip source={primary.ref.source}>{primary.label}</SourceChip>;
 }
 
 function Th({ children, className }: { children: React.ReactNode; className?: string }) {
