@@ -69,12 +69,20 @@ export interface CreateGuideInput {
   associations?: AssociationDraft[];
 }
 
-export interface UpdateGuideInput {
+/**
+ * Build 2A.1 editable contract: title, summary and associations ONLY.
+ * `guideType` is intentionally absent — it is assigned at creation and is not
+ * part of the draft update surface in this build.
+ *
+ * `associations` is the complete desired association set for the guide; the
+ * provider diffs and commits it together with the metadata as one operation.
+ */
+export interface UpdateGuideDraftInput {
   guideId: string;
   title: string;
   summary: string;
-  guideType: GuideType;
   actor: string;
+  associations: AssociationDraft[];
 }
 
 
@@ -105,8 +113,12 @@ export interface GuideStudioProvider {
    * (1.0 / Draft). Either both records are committed or neither is.
    */
   createGuide(input: CreateGuideInput): Promise<GuideWithVersion>;
-  /** Mutation: updates draft metadata and touches the current GuideVersion. */
-  updateGuide(input: UpdateGuideInput): Promise<GuideWithVersion>;
+  /**
+   * Single logical draft update: metadata + the complete association set are
+   * validated first and committed atomically. A validation failure persists
+   * nothing. Does not accept guideType.
+   */
+  updateGuideDraft(input: UpdateGuideDraftInput): Promise<GuideWithVersion>;
 }
 
 
