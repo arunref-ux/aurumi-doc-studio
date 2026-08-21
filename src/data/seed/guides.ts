@@ -23,6 +23,11 @@ interface GuideSeed {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string | null;
+  /**
+   * Earlier GuideVersion records. Coverage evaluates every version, so history
+   * keeps published/authoring coverage even when the current version changes.
+   */
+  history?: { versionNumber: string; status: GuideVersionStatus; publishedAt?: string | null; at: string }[];
   associations: AssocSpec[];
 }
 
