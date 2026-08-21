@@ -228,7 +228,7 @@ function EntityList({
   onRetry: () => void;
   selectedId: string | null;
   onSelect: (item: { externalId: string; name: string }) => void;
-  placeholder?: string;
+  placeholder?: string | undefined;
   disabledKeys: string[];
   keyOf: (externalId: string) => string;
 }) {
