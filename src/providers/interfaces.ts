@@ -99,7 +99,16 @@ export interface GuideStudioProvider {
    * the domain boundary. Only callable through the command bus.
    */
   createAssociation(input: CreateAssociationInput): Promise<GuideAssociation>;
+  removeAssociation(input: RemoveAssociationInput): Promise<void>;
+  /**
+   * Atomic mutation: creates a Guide together with its initial GuideVersion
+   * (1.0 / Draft). Either both records are committed or neither is.
+   */
+  createGuide(input: CreateGuideInput): Promise<GuideWithVersion>;
+  /** Mutation: updates draft metadata and touches the current GuideVersion. */
+  updateGuide(input: UpdateGuideInput): Promise<GuideWithVersion>;
 }
+
 
 export interface ProviderRegistry {
   devHarmony: DevHarmonyProvider;
