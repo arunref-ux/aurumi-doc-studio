@@ -24,12 +24,17 @@ export interface CreateGuideCommandInput {
   associations?: AssociationDraftInput[];
 }
 
-export interface UpdateGuideCommandInput {
+/**
+ * Build 2A.1 editable contract: title, summary and the complete association
+ * set. `guideType` is deliberately NOT accepted — it cannot be changed through
+ * the guide update path in this build.
+ */
+export interface UpdateGuideDraftCommandInput {
   guideId: string;
   title: string;
   summary: string;
-  guideType: GuideType;
   actor: string;
+  associations: AssociationDraftInput[];
 }
 
 export interface AddGuideAssociationInput {
