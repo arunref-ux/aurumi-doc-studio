@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { isActionAuthorized } from "@/commands/command-bus";
 import {
   GUIDE_ADMIN_PERMISSION,
-  GUIDE_ACTIONS,
   type AuthorizedUser,
   type GuideActionKey,
   type GuidePermission,
@@ -66,10 +66,13 @@ export function GuideStudioAuthorizationProvider({ children }: { children: React
       hasAnyPermission: (list) => isGuideAdmin() || list.some((item) => permissions.has(item)),
       hasAllPermissions: (list) => isGuideAdmin() || list.every((item) => permissions.has(item)),
       isGuideAdmin,
-      canRunAction: (action) => {
-        const definition = GUIDE_ACTIONS[action];
-        return isGuideAdmin() || definition.requires.some((item) => permissions.has(item));
-      },
+      // Single decision rule: the same predicate the command bus enforces
+      // server-side, so UI gating can never diverge from authorization.
+      canRunAction: (action) =>
+        isActionAuthorized(
+          action,
+          user ? { userId: user.id, permissions: user.effectivePermissions } : null,
+        ),
       simulation: {
         supported: authorizationProvider.supportsSimulation,
         users,
