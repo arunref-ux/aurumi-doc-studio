@@ -17,6 +17,7 @@ import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as LibraryIndexRouteImport } from './routes/library.index'
 import { Route as LibraryGuideIdRouteImport } from './routes/library.$guideId'
 import { Route as LibraryNewRouteImport } from './routes/library.new'
+import { Route as LibraryEditGuideIdRouteImport } from './routes/library.edit.$guideId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +59,11 @@ const LibraryNewRoute = LibraryNewRouteImport.update({
   path: '/new',
   getParentRoute: () => LibraryRoute,
 } as any)
+const LibraryEditGuideIdRoute = LibraryEditGuideIdRouteImport.update({
+  id: '/edit/$guideId',
+  path: '/edit/$guideId',
+  getParentRoute: () => LibraryRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/library/$guideId': typeof LibraryGuideIdRoute
   '/library/new': typeof LibraryNewRoute
   '/library/': typeof LibraryIndexRoute
+  '/library/edit/$guideId': typeof LibraryEditGuideIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/library/$guideId': typeof LibraryGuideIdRoute
   '/library/new': typeof LibraryNewRoute
   '/library': typeof LibraryIndexRoute
+  '/library/edit/$guideId': typeof LibraryEditGuideIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/library/$guideId': typeof LibraryGuideIdRoute
   '/library/new': typeof LibraryNewRoute
   '/library/': typeof LibraryIndexRoute
+  '/library/edit/$guideId': typeof LibraryEditGuideIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/library/$guideId'
     | '/library/new'
     | '/library/'
+    | '/library/edit/$guideId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/library/$guideId'
     | '/library/new'
     | '/library'
+    | '/library/edit/$guideId'
   id:
     | '__root__'
     | '/'
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/library/$guideId'
     | '/library/new'
     | '/library/'
+    | '/library/edit/$guideId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -187,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryNewRouteImport
       parentRoute: typeof LibraryRoute
     }
+    '/library/edit/$guideId': {
+      id: '/library/edit/$guideId'
+      path: '/edit/$guideId'
+      fullPath: '/library/edit/$guideId'
+      preLoaderRoute: typeof LibraryEditGuideIdRouteImport
+      parentRoute: typeof LibraryRoute
+    }
   }
 }
 
@@ -194,12 +213,14 @@ interface LibraryRouteChildren {
   LibraryGuideIdRoute: typeof LibraryGuideIdRoute
   LibraryNewRoute: typeof LibraryNewRoute
   LibraryIndexRoute: typeof LibraryIndexRoute
+  LibraryEditGuideIdRoute: typeof LibraryEditGuideIdRoute
 }
 
 const LibraryRouteChildren: LibraryRouteChildren = {
   LibraryGuideIdRoute: LibraryGuideIdRoute,
   LibraryNewRoute: LibraryNewRoute,
   LibraryIndexRoute: LibraryIndexRoute,
+  LibraryEditGuideIdRoute: LibraryEditGuideIdRoute,
 }
 
 const LibraryRouteWithChildren =
