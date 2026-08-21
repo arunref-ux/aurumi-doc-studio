@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus, RefreshCw, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
@@ -50,6 +50,7 @@ export const Route = createFileRoute("/library/")({
 const ALL = "all";
 
 function LibraryPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<GuideStatus | typeof ALL>(ALL);
   const [guideType, setGuideType] = useState<GuideType | typeof ALL>(ALL);
@@ -97,6 +98,7 @@ function LibraryPage() {
               action="guide.action.create"
               variant="default"
               icon={<Plus className="size-3.5" />}
+              onClick={() => void navigate({ to: "/library/new" })}
             />
           </div>
         }

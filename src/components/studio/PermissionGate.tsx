@@ -56,7 +56,9 @@ export function ActionButton({
   size?: "sm" | "default";
 }) {
   const definition = GUIDE_ACTIONS[action];
-  const pending = definition.availableInBuild > 1;
+  // An action is live once a handler is wired; the rest stay disabled
+  // placeholders until their build lands.
+  const pending = definition.availableInBuild > 1 && !onClick;
   const requirement = definition.requires.map((p) => `${p}`).join(" or ");
 
   return (
@@ -66,7 +68,7 @@ export function ActionButton({
           <Button
             variant={variant}
             size={size}
-            disabled={pending || !onClick}
+            disabled={pending}
             onClick={onClick}
             className={cn(className)}
           >

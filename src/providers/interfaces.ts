@@ -10,6 +10,7 @@ import type {
   GuideQuery,
   GuideReferenceTarget,
   GuideStatusCounts,
+  GuideType,
   GuideVersion,
   GuideWithVersion,
   IntentRef,
@@ -47,6 +48,36 @@ export interface CreateAssociationInput {
   parentExternalId?: string;
 }
 
+export interface RemoveAssociationInput {
+  guideId: string;
+  ref: GuideReferenceTarget;
+}
+
+/** Association draft carried by Create/Update, before it has an id. */
+export interface AssociationDraft {
+  ref: GuideReferenceTarget;
+  label: string;
+  parentExternalId?: string;
+}
+
+export interface CreateGuideInput {
+  title: string;
+  summary: string;
+  guideType: GuideType;
+  /** Display name of the acting user; authorization happens in the command bus. */
+  actor: string;
+  associations?: AssociationDraft[];
+}
+
+export interface UpdateGuideInput {
+  guideId: string;
+  title: string;
+  summary: string;
+  guideType: GuideType;
+  actor: string;
+}
+
+
 /**
  * Guide Studio owns Guides, GuideVersions and GuideAssociations only.
  * It never enumerates external hierarchies.
@@ -68,7 +99,16 @@ export interface GuideStudioProvider {
    * the domain boundary. Only callable through the command bus.
    */
   createAssociation(input: CreateAssociationInput): Promise<GuideAssociation>;
+  removeAssociation(input: RemoveAssociationInput): Promise<void>;
+  /**
+   * Atomic mutation: creates a Guide together with its initial GuideVersion
+   * (1.0 / Draft). Either both records are committed or neither is.
+   */
+  createGuide(input: CreateGuideInput): Promise<GuideWithVersion>;
+  /** Mutation: updates draft metadata and touches the current GuideVersion. */
+  updateGuide(input: UpdateGuideInput): Promise<GuideWithVersion>;
 }
+
 
 export interface ProviderRegistry {
   devHarmony: DevHarmonyProvider;
