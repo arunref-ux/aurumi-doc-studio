@@ -182,8 +182,11 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
 
   return (
     <div className="space-y-5">
+      {/* Single confirmation surface for every blocked navigation. */}
+      <guard.Dialog />
+
       <button
-        onClick={leave}
+        onClick={() => guard.confirmNavigation(leave)}
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-3.5" /> {guide ? "Back to Guide" : "Back to Guide Library"}
