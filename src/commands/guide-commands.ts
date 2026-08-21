@@ -59,11 +59,14 @@ export const createGuideCommand = defineCommand<CreateGuideCommandInput, GuideWi
   (input) => providers.guideStudio.createGuide(input),
 );
 
-/** Build 2A.1: Draft metadata update. Requires guide.edit. */
-export const updateGuideCommand = defineCommand<UpdateGuideCommandInput, GuideWithVersion>(
-  "guide.action.edit",
-  (input) => providers.guideStudio.updateGuide(input),
-);
+/**
+ * Build 2A.1: the single logical draft update (metadata + associations).
+ * Requires guide.edit; the provider validates the whole edit before committing.
+ */
+export const updateGuideDraftCommand = defineCommand<
+  UpdateGuideDraftCommandInput,
+  GuideWithVersion
+>("guide.action.edit", (input) => providers.guideStudio.updateGuideDraft(input));
 
 /**
  * Authorization is checked in the bus, then the provider validates
