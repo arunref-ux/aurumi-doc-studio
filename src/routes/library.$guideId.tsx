@@ -149,7 +149,11 @@ function GuideDetailPage() {
               Read-only rendering of working version v{data.currentVersion.versionNumber}.
             </p>
           </div>
-          <StatusBadge status={data.currentVersion.status} />
+          <div className="flex items-center gap-2">
+            <ContentIndicator contentMarkdown={data.currentVersion.contentMarkdown} />
+            <StatusBadge status={data.currentVersion.status} />
+          </div>
+
         </div>
         <MarkdownPreview
           markdown={data.currentVersion.contentMarkdown}
