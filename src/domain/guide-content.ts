@@ -50,6 +50,23 @@ export function isValidContentUrl(value: string): boolean {
   }
 }
 
+/**
+ * Image-specific rule: images are dereferenced by the browser, so only
+ * http(s) sources are ever acceptable. mailto:, javascript:, data:, file:
+ * and every other scheme are rejected. Used at the insertion boundary and
+ * again when rendering the preview.
+ */
+export function isSafeImageUrl(value: string): boolean {
+  const candidate = value.trim();
+  if (!candidate) return false;
+  try {
+    const protocol = new URL(candidate).protocol;
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function contentIsEmpty(content: string): boolean {
   return content.replace(/\s/g, "").length === 0;
 }

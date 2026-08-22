@@ -35,7 +35,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
-import { isValidContentUrl, STARTER_CONTENT_MARKDOWN } from "@/domain/guide-content";
+import {
+  isSafeImageUrl,
+  isValidContentUrl,
+  STARTER_CONTENT_MARKDOWN,
+} from "@/domain/guide-content";
 
 /**
  * Rich content authoring interface (Build 2A.2).
