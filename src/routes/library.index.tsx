@@ -186,13 +186,15 @@ function LibraryPage() {
             <table className="w-full min-w-[980px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left">
-                  <Th className="w-[30%]">Guide</Th>
+                  <Th className="w-[28%]">Guide</Th>
                   <Th>Type</Th>
                   <Th>Status</Th>
+                  <Th>Content</Th>
                   <Th>Version</Th>
-                  <Th className="w-[22%]">Primary context</Th>
+                  <Th className="w-[20%]">Primary context</Th>
                   <Th>Owner</Th>
                   <Th>Updated</Th>
+
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
