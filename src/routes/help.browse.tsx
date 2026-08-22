@@ -158,15 +158,9 @@ function ContextList({
   areaId,
   contexts,
 }: {
-  title?: string;
-  areaId?: string;
-  contexts: Array<{
-    refKey: string;
-    label: string;
-    kindLabel: string;
-    totalPublishedGuideCount: number;
-    children: Array<{ refKey: string; label: string; totalPublishedGuideCount: number }>;
-  }>;
+  title?: string | undefined;
+  areaId?: string | undefined;
+  contexts: PublishedBrowseContext[];
 }) {
   return (
     <section>
