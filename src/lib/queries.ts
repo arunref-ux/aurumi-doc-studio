@@ -1,10 +1,13 @@
 import { queryOptions } from "@tanstack/react-query";
+import { publishedGuideDelivery } from "@/delivery";
+import type { PublishedGuideRefQuery } from "@/delivery/interfaces";
 import type { GuideQuery } from "@/domain/types";
 import { providers } from "@/providers";
 import { createCoverageService } from "@/services/coverage.service";
 
 /** Composition boundary: coverage joins external providers + Guide Studio. */
 const coverageService = createCoverageService(providers);
+
 
 const retry = 1;
 
@@ -114,5 +117,39 @@ export const coverageQueries = {
       queryKey: ["coverage", "state-index"],
       queryFn: () => coverageService.getCoverageStateIndex(),
       retry: composedRetry,
+    }),
+};
+
+/**
+ * Build 3A — Published Guide Delivery access. The internal demonstration
+ * surface uses exactly the contract future Help consumers will use; published
+ * resolution never happens in components.
+ */
+export const publishedDeliveryQueries = {
+  list: () =>
+    queryOptions({
+      queryKey: ["published-delivery", "list"],
+      queryFn: () => publishedGuideDelivery.listPublishedGuides(),
+      retry,
+    }),
+  detail: (guideId: string | null) =>
+    queryOptions({
+      queryKey: ["published-delivery", "detail", guideId],
+      queryFn: () => publishedGuideDelivery.getPublishedGuide(guideId!),
+      enabled: Boolean(guideId),
+      retry,
+    }),
+  associationTargets: () =>
+    queryOptions({
+      queryKey: ["published-delivery", "association-targets"],
+      queryFn: () => publishedGuideDelivery.listPublishedAssociationTargets(),
+      retry,
+    }),
+  byAssociation: (query: PublishedGuideRefQuery | null) =>
+    queryOptions({
+      queryKey: ["published-delivery", "by-association", query],
+      queryFn: () => publishedGuideDelivery.getPublishedGuidesByAssociation(query!),
+      enabled: Boolean(query),
+      retry,
     }),
 };

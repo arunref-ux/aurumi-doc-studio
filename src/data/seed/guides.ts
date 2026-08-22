@@ -9,6 +9,21 @@ import type {
   GuideVersionStatus,
 } from "@/domain/types";
 
+/**
+ * Content snapshot of a previously published version, kept deliberately short:
+ * it demonstrates that delivery serves the PUBLISHED version's own content even
+ * while a newer Draft is being authored.
+ */
+const PUBLISHED_HISTORY_CONTENT = [
+  "## Assigning a permission set",
+  "",
+  "1. Open **Employee Management → People** and select the employee.",
+  "2. Open the **Access** tab.",
+  "3. Choose a permission set and select **Save**.",
+  "",
+  "> Least privilege: grant finance permission sets only to finance approvers.",
+].join("\n");
+
 type AssocSpec = Omit<GuideAssociation, "id" | "guideId">;
 
 interface GuideSeed {
@@ -32,7 +47,14 @@ interface GuideSeed {
    * Earlier GuideVersion records. Coverage evaluates every version, so history
    * keeps published/authoring coverage even when the current version changes.
    */
-  history?: { versionNumber: string; status: GuideVersionStatus; publishedAt?: string | null; at: string }[];
+  history?: {
+    versionNumber: string;
+    status: GuideVersionStatus;
+    publishedAt?: string | null;
+    at: string;
+    /** Content snapshot of the historical version (copy-by-value). */
+    contentMarkdown?: string;
+  }[];
   associations: AssocSpec[];
 }
 
@@ -269,6 +291,7 @@ const seeds: GuideSeed[] = [
       {
         versionNumber: "1.0",
         status: "published",
+        contentMarkdown: PUBLISHED_HISTORY_CONTENT,
         publishedAt: "2025-11-03T09:00:00Z",
         at: "2025-11-03T09:00:00Z",
       },
@@ -474,8 +497,8 @@ export const seedGuideVersions: GuideVersion[] = seeds.flatMap((seed) => [
     guideId: seed.id,
     versionNumber: entry.versionNumber,
     status: entry.status,
-    // Historical versions carry their own (here: empty) content.
-    contentMarkdown: "",
+    // Historical versions carry their own content snapshot (copy-by-value).
+    contentMarkdown: entry.contentMarkdown ?? "",
     createdAt: seed.createdAt,
     createdBy: seed.owner,
     updatedAt: entry.at,

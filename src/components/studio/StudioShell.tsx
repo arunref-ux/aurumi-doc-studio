@@ -4,6 +4,7 @@ import {
   ClipboardCheck,
   Database,
   LayoutDashboard,
+  Radio,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
   { to: "/review-queue", label: "Review Queue", icon: ClipboardCheck },
   { to: "/coverage", label: "Documentation Coverage", icon: ShieldCheck },
   { to: "/sources", label: "Sources", icon: Database },
+  { to: "/delivery", label: "Published Delivery", icon: Radio },
 ];
 
 export function StudioShell({ children }: { children: ReactNode }) {
@@ -59,10 +61,10 @@ export function StudioShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="border-t border-sidebar-border px-5 py-4 text-[0.6875rem] leading-relaxed text-sidebar-muted">
-          <p className="font-medium text-sidebar-foreground">Build 2B · Prototype</p>
+          <p className="font-medium text-sidebar-foreground">Build 3A · Prototype</p>
           <p>
-            Guide creation and rich content authoring are live. Review and publishing workflow
-            arrives in Build 2B.
+            Authoring, review, publishing and the read-only Published Guide Delivery boundary are
+            live. Standard Help Portal arrives in Build 3B.
           </p>
 
         </div>
