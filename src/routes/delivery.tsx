@@ -197,7 +197,7 @@ function DeliveryPage() {
 
         <div className="space-y-4 p-4">
           <Select
-            value={selectedRefKey ?? undefined}
+            {...(selectedRefKey ? { value: selectedRefKey } : {})}
             onValueChange={(value) => setSelectedRefKey(value)}
           >
             <SelectTrigger className="max-w-lg">

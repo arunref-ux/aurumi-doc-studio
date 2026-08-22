@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoverageRouteImport } from './routes/coverage'
+import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as ReviewQueueRouteImport } from './routes/review-queue'
 import { Route as SourcesRouteImport } from './routes/sources'
@@ -27,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
 const CoverageRoute = CoverageRouteImport.update({
   id: '/coverage',
   path: '/coverage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeliveryRoute = DeliveryRouteImport.update({
+  id: '/delivery',
+  path: '/delivery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibraryRoute = LibraryRouteImport.update({
@@ -68,6 +74,7 @@ const LibraryEditGuideIdRoute = LibraryEditGuideIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/coverage': typeof CoverageRoute
+  '/delivery': typeof DeliveryRoute
   '/library': typeof LibraryRouteWithChildren
   '/review-queue': typeof ReviewQueueRoute
   '/sources': typeof SourcesRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/coverage': typeof CoverageRoute
+  '/delivery': typeof DeliveryRoute
   '/review-queue': typeof ReviewQueueRoute
   '/sources': typeof SourcesRoute
   '/library/$guideId': typeof LibraryGuideIdRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/coverage': typeof CoverageRoute
+  '/delivery': typeof DeliveryRoute
   '/library': typeof LibraryRouteWithChildren
   '/review-queue': typeof ReviewQueueRoute
   '/sources': typeof SourcesRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/coverage'
+    | '/delivery'
     | '/library'
     | '/review-queue'
     | '/sources'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/coverage'
+    | '/delivery'
     | '/review-queue'
     | '/sources'
     | '/library/$guideId'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/coverage'
+    | '/delivery'
     | '/library'
     | '/review-queue'
     | '/sources'
@@ -136,6 +148,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CoverageRoute: typeof CoverageRoute
+  DeliveryRoute: typeof DeliveryRoute
   LibraryRoute: typeof LibraryRouteWithChildren
   ReviewQueueRoute: typeof ReviewQueueRoute
   SourcesRoute: typeof SourcesRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/coverage'
       fullPath: '/coverage'
       preLoaderRoute: typeof CoverageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/delivery': {
+      id: '/delivery'
+      path: '/delivery'
+      fullPath: '/delivery'
+      preLoaderRoute: typeof DeliveryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/library': {
@@ -229,6 +249,7 @@ const LibraryRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CoverageRoute: CoverageRoute,
+  DeliveryRoute: DeliveryRoute,
   LibraryRoute: LibraryRouteWithChildren,
   ReviewQueueRoute: ReviewQueueRoute,
   SourcesRoute: SourcesRoute,

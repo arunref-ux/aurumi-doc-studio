@@ -4,6 +4,7 @@ import {
   ClipboardCheck,
   Database,
   LayoutDashboard,
+  Radio,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
   { to: "/review-queue", label: "Review Queue", icon: ClipboardCheck },
   { to: "/coverage", label: "Documentation Coverage", icon: ShieldCheck },
   { to: "/sources", label: "Sources", icon: Database },
+  { to: "/delivery", label: "Published Delivery", icon: Radio },
 ];
 
 export function StudioShell({ children }: { children: ReactNode }) {
