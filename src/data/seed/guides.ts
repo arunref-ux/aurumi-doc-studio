@@ -472,6 +472,8 @@ export const seedGuideVersions: GuideVersion[] = seeds.flatMap((seed) => [
     guideId: seed.id,
     versionNumber: entry.versionNumber,
     status: entry.status,
+    // Historical versions carry their own (here: empty) content.
+    contentMarkdown: "",
     createdAt: seed.createdAt,
     createdBy: seed.owner,
     updatedAt: entry.at,
@@ -483,6 +485,7 @@ export const seedGuideVersions: GuideVersion[] = seeds.flatMap((seed) => [
     guideId: seed.id,
     versionNumber: seed.currentVersion,
     status: seed.status,
+    contentMarkdown: seed.contentMarkdown ?? "",
     createdAt: seed.createdAt,
     createdBy: seed.owner,
     updatedAt: seed.updatedAt,
