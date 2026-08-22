@@ -21,9 +21,14 @@ import {
   GUIDE_WORKFLOW_EVENT_LABELS,
   requireCurrentGuideVersion,
   resolveGuideVersionTransition,
+  resolveSupersedeTransition,
   type GuideVersionWorkflowEvent,
   type GuideWorkflowAction,
 } from "@/domain/guide-workflow";
+import {
+  assertCanCreateDraftVersion,
+  nextDraftVersionNumber,
+} from "@/domain/guide-versioning";
 import {
   GUIDE_STATUS_ORDER,
   GUIDE_TYPE_LABELS,
@@ -38,6 +43,7 @@ import {
 } from "@/domain/types";
 import type {
   CreateAssociationInput,
+  CreateGuideDraftVersionInput,
   CreateGuideInput,
   GuideStudioProvider,
   GuideWorkflowTransitionInput,
@@ -76,8 +82,23 @@ function currentVersion(guide: Guide): GuideVersion {
   return version;
 }
 
+/** Resolved published version — explicitly separate from the working version. */
+function publishedVersion(guide: Guide): GuideVersion | null {
+  if (guide.publishedVersionId === null) return null;
+  const version = versions.find((item) => item.id === guide.publishedVersionId);
+  if (!version) {
+    throw new Error(`Guide ${guide.id} references an unknown published GuideVersion.`);
+  }
+  return version;
+}
+
 function withVersion(guide: Guide): GuideWithVersion {
-  return { ...guide, currentVersion: currentVersion(guide), versions: versionsOf(guide.id) };
+  return {
+    ...guide,
+    currentVersion: currentVersion(guide),
+    publishedVersion: publishedVersion(guide),
+    versions: versionsOf(guide.id),
+  };
 }
 
 function matches(guide: GuideWithVersion, query: GuideQuery): boolean {
@@ -234,11 +255,55 @@ function transition(
     ...(note ? { note } : {}),
   };
 
+  /**
+   * Build 2C publish side effects, staged before any commit: the previously
+   * published version is superseded (archived) through the system transition,
+   * and the guide's published pointer moves to this version.
+   */
+  const supersedeTarget =
+    action === "publish"
+      ? versions.find(
+          (item) => item.id === guide.publishedVersionId && item.id !== version.id,
+        ) ?? null
+      : null;
+  const supersededStatus = supersedeTarget ? resolveSupersedeTransition(supersedeTarget.status) : null;
+  const stagedSupersedeEvent: GuideVersionWorkflowEvent | null =
+    supersedeTarget && supersededStatus
+      ? {
+          id: nextId(`${guide.id}-wf`),
+          guideId: guide.id,
+          guideVersionId: supersedeTarget.id,
+          action: "supersede",
+          fromStatus: supersedeTarget.status,
+          toStatus: supersededStatus,
+          performedAt: now,
+          performedBy: input.actor,
+        }
+      : null;
+
   // ---- commit (status + event together) ----
   version.status = toStatus;
   version.updatedAt = now;
   version.updatedBy = input.actor;
   guide.updatedAt = now;
+  if (action === "publish") {
+    version.publishedAt = now;
+    guide.publishedVersionId = version.id;
+    if (supersedeTarget && supersededStatus && stagedSupersedeEvent) {
+      supersedeTarget.status = supersededStatus;
+      supersedeTarget.updatedAt = now;
+      supersedeTarget.updatedBy = input.actor;
+      workflowEvents.push(stagedSupersedeEvent);
+      activity.push({
+        id: nextId(`${guide.id}-activity`),
+        guideId: guide.id,
+        actor: input.actor,
+        action: GUIDE_WORKFLOW_EVENT_LABELS.supersede,
+        detail: `Version ${supersedeTarget.versionNumber} archived`,
+        at: now,
+      });
+    }
+  }
   workflowEvents.push(stagedEvent);
   activity.push({
     id: nextId(`${guide.id}-activity`),
@@ -390,6 +455,7 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
           summary: input.summary.trim(),
           guideType: input.guideType,
           currentVersionId: versionId,
+          publishedVersionId: null,
           owner: input.actor,
           createdAt: now,
           updatedAt: now,
@@ -536,4 +602,68 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
     simulateRequest(() => clone(transition("approve", input)), {
       label: "Guide Workflow API",
     }),
+
+  publishGuideVersion: (input) =>
+    simulateRequest(() => clone(transition("publish", input)), {
+      label: "Guide Publishing API",
+    }),
+
+  /**
+   * Build 2C: new Draft version from an existing Guide.
+   *
+   * Staged validation -> single commit. The published version and its pointer
+   * are never touched here, so users keep seeing the published version while
+   * the new draft is authored.
+   */
+  createGuideDraftVersion: (input: CreateGuideDraftVersionInput) =>
+    simulateRequest(
+      () => {
+        const guide = requireGuide(input.guideId);
+        const source = currentVersion(guide);
+        requireCurrentGuideVersion(input.guideVersionId, source.id);
+        // Centralized version-creation policy: no concurrent in-flight version.
+        assertCanCreateDraftVersion(guide.id, source);
+
+        const guideVersions = versionsOf(guide.id);
+        const now = new Date().toISOString();
+        const stagedVersion: GuideVersion = {
+          id: `${guide.id}-v${nextDraftVersionNumber(guideVersions)}`,
+          guideId: guide.id,
+          versionNumber: nextDraftVersionNumber(guideVersions),
+          status: INITIAL_VERSION_STATUS,
+          // Content carries forward from the version it supersedes.
+          contentMarkdown: source.contentMarkdown,
+          createdAt: now,
+          createdBy: input.actor,
+          updatedAt: now,
+          updatedBy: input.actor,
+          publishedAt: null,
+        };
+        if (versions.some((version) => version.id === stagedVersion.id)) {
+          throw new Error(`GuideVersion ${stagedVersion.id} already exists.`);
+        }
+
+        const stagedGuide: Guide = { ...guide, currentVersionId: stagedVersion.id, updatedAt: now };
+        const candidateGuides = guides.map((item) => (item.id === guide.id ? stagedGuide : item));
+        const candidateVersions = [...versions, stagedVersion];
+        validateGuideAssociations(candidateGuides);
+        validateGuideVersions(candidateGuides, candidateVersions);
+
+        // ---- commit ----
+        versions.push(stagedVersion);
+        guide.currentVersionId = stagedVersion.id;
+        guide.updatedAt = now;
+        activity.push({
+          id: nextId(`${guide.id}-activity`),
+          guideId: guide.id,
+          actor: input.actor,
+          action: "New draft version created",
+          detail: `Version ${stagedVersion.versionNumber} from v${source.versionNumber}`,
+          at: now,
+        });
+
+        return clone(withVersion(guide));
+      },
+      { label: "Guide Versioning API" },
+    ),
 };

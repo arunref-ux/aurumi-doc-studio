@@ -113,7 +113,7 @@ export function validateGuideAssociations(guides: readonly Guide[]): void {
 /** Validates guide/version referential integrity at initialization. */
 export function validateGuideVersions(
   guides: readonly Guide[],
-  versions: readonly { id: string; guideId: string }[],
+  versions: readonly { id: string; guideId: string; status?: string }[],
 ): void {
   const issues: string[] = [];
   const byId = new Map(versions.map((version) => [version.id, version]));
@@ -125,6 +125,24 @@ export function validateGuideVersions(
     } else if (current.guideId !== guide.id) {
       issues.push(
         `Guide "${guide.id}" currentVersionId "${guide.currentVersionId}" belongs to guide "${current.guideId}".`,
+      );
+    }
+  }
+
+  for (const guide of guides) {
+    if (guide.publishedVersionId === null) continue;
+    const published = byId.get(guide.publishedVersionId);
+    if (!published) {
+      issues.push(
+        `Guide "${guide.id}" references unknown publishedVersionId "${guide.publishedVersionId}".`,
+      );
+    } else if (published.guideId !== guide.id) {
+      issues.push(
+        `Guide "${guide.id}" publishedVersionId "${guide.publishedVersionId}" belongs to guide "${published.guideId}".`,
+      );
+    } else if (published.status !== "published") {
+      issues.push(
+        `Guide "${guide.id}" publishedVersionId "${guide.publishedVersionId}" has status "${published.status}"; it must be "published".`,
       );
     }
   }
