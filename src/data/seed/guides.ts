@@ -24,12 +24,76 @@ interface GuideSeed {
   updatedAt: string;
   publishedAt?: string | null;
   /**
+   * Canonical Markdown content of the CURRENT GuideVersion (Build 2A.2).
+   * Content belongs to the version, never to the Guide.
+   */
+  contentMarkdown?: string;
+  /**
    * Earlier GuideVersion records. Coverage evaluates every version, so history
    * keeps published/authoring coverage even when the current version changes.
    */
   history?: { versionNumber: string; status: GuideVersionStatus; publishedAt?: string | null; at: string }[];
   associations: AssocSpec[];
 }
+
+/**
+ * Realistic rich-content example demonstrating the full authoring surface:
+ * headings, paragraph, numbered steps, bulleted list, link, blockquote,
+ * inline code, code block, image and a YouTube video reference — all in
+ * portable Markdown.
+ */
+const CREATE_DEAL_CONTENT = `# Overview
+
+Deals track a revenue opportunity through your pipeline. This guide walks a sales user through creating a deal, assigning an owner and setting an expected close date.
+
+## Before you start
+
+- You need the \`deal.create\` permission in the Deals app.
+- At least one pipeline must be configured.
+
+## Steps
+
+1. Open **Deals** from the main navigation.
+2. Select **New Deal** in the top right of the pipeline board.
+3. Enter the *deal name*, account and value.
+4. Choose the pipeline stage and set the **expected close date**.
+5. Assign an owner, then select **Save**.
+
+> Deals created without an expected close date are excluded from forecast reports.
+
+![Deal creation form](https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200)
+
+## API reference
+
+Inline example: call \`POST /api/deals\` with the pipeline id.
+
+\`\`\`json
+{
+  "name": "Acme renewal",
+  "pipelineId": "pipeline-default",
+  "value": 24000,
+  "expectedCloseDate": "2026-09-30"
+}
+\`\`\`
+
+## Additional Information
+
+- [Change a deal stage](https://help.aurumi.example.com/guides/change-deal-stage)
+- [Watch the deal walkthrough](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+`;
+
+const EMPLOYEE_ROLES_DRAFT_CONTENT = `# Overview
+
+Roles and permission sets control what an employee can see and do. This draft covers least-privilege assignment for HR and finance teams.
+
+## Steps
+
+1. Open **Employee Management → Roles**.
+2. Select the employee record to change.
+3. Apply the smallest permission set that still covers the job.
+
+> Draft in progress — accrual and finance approval sections are pending review.
+`;
 
 /** Validated at construction time — no unsafe type assertions. */
 const ref = (source: string, kind: string, externalId: string): GuideReferenceTarget =>
