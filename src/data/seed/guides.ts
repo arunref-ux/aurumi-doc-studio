@@ -117,6 +117,97 @@ Roles and permission sets control what an employee can see and do. This draft co
 > Draft in progress — accrual and finance approval sections are pending review.
 `;
 
+/**
+ * Review-stage content: what a reviewer actually reads in the Review Queue.
+ * Written as a realistic in-flight article, including open reviewer notes.
+ */
+const INVITE_EMPLOYEE_REVIEW_CONTENT = `# Overview
+
+Invitations let a new employee activate their own Aurumi login. This guide covers sending, resending and revoking workspace invitations.
+
+## Before you start
+
+- You need the \`employee.invite\` permission in Employee Management.
+- The employee record must already exist with a valid work email.
+
+## Steps
+
+1. Open **Employee Management → People**.
+2. Select the employee, then choose **Invite to workspace**.
+3. Confirm the *work email* and pick the initial role.
+4. Select **Send invitation**.
+
+An invitation expires after **7 days**. Expired invitations can be resent from the same panel.
+
+## Resending or revoking
+
+| Action | Where | Effect |
+| --- | --- | --- |
+| Resend | People → Invitations | Issues a new 7-day link |
+| Revoke | People → Invitations | Invalidates the outstanding link |
+
+> Revoking an invitation does not delete the employee record.
+
+![Invitation panel](https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200)
+
+## Additional Information
+
+- [Managing Employee Roles](https://help.aurumi.example.com/guides/managing-employee-roles)
+- [Watch the onboarding video walkthrough](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+`;
+
+const INVOICE_SYNC_REVIEW_CONTENT = `# Overview
+
+Invoice synchronisation pushes Aurumi invoices to Zoho Books. When a sync fails, the invoice stays in **Retry pending** and the failure reason is recorded on the sync log.
+
+## Check the sync log first
+
+1. Open **Connectors → Zoho Books → Sync activity**.
+2. Filter by *Object type = Invoice* and *Status = Failed*.
+3. Open the failed row to read the returned error code.
+
+## Common causes
+
+- **Mapping gap** — a tax rate, ledger or item in Aurumi has no Zoho Books counterpart.
+- **Tax configuration mismatch** — the invoice uses a tax group that is inactive in Zoho.
+- **Currency rule** — the invoice currency is not enabled on the Zoho organisation.
+- **Duplicate reference** — an invoice with the same number already exists in Zoho.
+
+## Fix a mapping gap
+
+1. Open **Connectors → Zoho Books → Field mapping**.
+2. Map the unmatched value, then select **Save mapping**.
+3. Return to the failed invoice and choose **Retry sync**.
+
+\`\`\`json
+{
+  "objectType": "invoice",
+  "errorCode": "ZB_TAX_NOT_FOUND",
+  "retryable": true
+}
+\`\`\`
+
+> Automatic retries run three times with backoff. After that a manual retry is required.
+
+## Additional Information
+
+- [Troubleshoot Zoho Authentication](https://help.aurumi.example.com/guides/troubleshoot-zoho-authentication)
+`;
+
+const WHATSAPP_APPROVED_CONTENT = `# Overview
+
+Connect a WhatsApp Business account so Aurumi can send and receive customer messages.
+
+## Steps
+
+1. Open **Connectors → WhatsApp Business** and select **Connect**.
+2. Sign in with the Meta Business account that owns the number.
+3. Choose the business number and complete verification.
+4. Set the **message sync boundary** (default: 30 days of history).
+
+> Approved and locked for editing. Publishing makes this guide live in the Help Portal.
+`;
+
 /** Validated at construction time — no unsafe type assertions. */
 const ref = (source: string, kind: string, externalId: string): GuideReferenceTarget =>
   guideRef(source, kind, externalId);
