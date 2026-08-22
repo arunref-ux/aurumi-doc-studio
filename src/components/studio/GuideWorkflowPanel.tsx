@@ -130,8 +130,8 @@ export function GuideWorkflowPanel({
         <div className="flex flex-wrap items-center gap-2">
           {actions.map((action) => {
             const isSubmit = action === "submit_for_review";
-            const disabled =
-              pending !== null || (isSubmit && dirty) || (action === "request_changes" && false);
+            // Dirty drafts may not be submitted: Save Draft first (no auto-save).
+            const disabled = pending !== null || (isSubmit && dirty);
             return (
               <Button
                 key={action}
