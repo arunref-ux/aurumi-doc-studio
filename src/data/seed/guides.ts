@@ -357,6 +357,7 @@ const seeds: GuideSeed[] = [
     createdAt: "2026-07-02T09:40:00Z",
     updatedAt: "2026-08-18T13:25:00Z",
     publishedAt: null,
+    contentMarkdown: INVITE_EMPLOYEE_REVIEW_CONTENT,
     associations: [
       app("app-employee-management", "Employee Management"),
       feature("feature-invite-employee", "Invite Employee", "app-employee-management"),
@@ -481,6 +482,7 @@ const seeds: GuideSeed[] = [
     createdAt: "2026-06-05T14:00:00Z",
     updatedAt: "2026-08-20T09:50:00Z",
     publishedAt: null,
+    contentMarkdown: INVOICE_SYNC_REVIEW_CONTENT,
     associations: [
       connector("connector-zoho-books", "Zoho Books"),
       capability(
@@ -504,6 +506,7 @@ const seeds: GuideSeed[] = [
     createdAt: "2026-04-28T08:20:00Z",
     updatedAt: "2026-08-12T10:05:00Z",
     publishedAt: null,
+    contentMarkdown: WHATSAPP_APPROVED_CONTENT,
     associations: [
       connector("connector-whatsapp-business", "WhatsApp Business"),
       capability(
