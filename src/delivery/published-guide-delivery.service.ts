@@ -245,3 +245,25 @@ export function createPublishedGuideDeliveryService(
     getRelatedPublishedGuides,
   };
 }
+
+/** Association target -> consumer browse context with children. */
+function toContext(
+  target: PublishedAssociationTarget,
+  children: PublishedBrowseContext[],
+): PublishedBrowseContext {
+  return {
+    refKey: target.refKey,
+    label: target.label,
+    kindLabel: REFERENCE_KIND_LABELS[target.ref.kind],
+    publishedGuideCount: target.publishedGuideCount,
+    totalPublishedGuideCount:
+      target.publishedGuideCount +
+      children.reduce((total, child) => total + child.totalPublishedGuideCount, 0),
+    children: [...children].sort((a, b) => a.label.localeCompare(b.label)),
+  };
+}
+
+/** Association target -> leaf browse context. */
+function toLeaf(target: PublishedAssociationTarget): PublishedBrowseContext {
+  return toContext(target, []);
+}
