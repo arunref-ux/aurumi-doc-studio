@@ -110,10 +110,22 @@ export function validateGuideAssociations(guides: readonly Guide[]): void {
   }
 }
 
-/** Validates guide/version referential integrity at initialization. */
+/**
+ * Centralized GuideVersion integrity validation.
+ *
+ * Single path for seed data, hydrated/imported data, provider store
+ * initialization and every staged runtime mutation. It collectively enforces:
+ *  1. every GuideVersion belongs to an existing Guide;
+ *  2. currentVersionId resolves to a version of that Guide;
+ *  3. publishedVersionId, when present, resolves to a version of that Guide;
+ *  4. a Guide has zero or one Published GuideVersion;
+ *  5. an existing Published version exactly matches publishedVersionId;
+ *  6. with no Published version, publishedVersionId must be null;
+ *  7. versionNumber is unique within each Guide.
+ */
 export function validateGuideVersions(
   guides: readonly Guide[],
-  versions: readonly { id: string; guideId: string; status?: string }[],
+  versions: readonly { id: string; guideId: string; status?: string; versionNumber?: string }[],
 ): void {
   const issues: string[] = [];
   const byId = new Map(versions.map((version) => [version.id, version]));
@@ -153,6 +165,49 @@ export function validateGuideVersions(
     }
   }
 
+  /**
+   * Rules 4-7 are guide-scoped, so they are evaluated per guide over that
+   * guide's own versions only. Different guides may reuse version numbers.
+   */
+  for (const guide of guides) {
+    const own = versions.filter((version) => version.guideId === guide.id);
+
+    // Rule 7: (guideId, versionNumber) uniqueness.
+    const seenNumbers = new Set<string>();
+    for (const version of own) {
+      const number = version.versionNumber;
+      if (number === undefined) continue;
+      if (seenNumbers.has(number)) {
+        issues.push(
+          `Guide "${guide.id}" has more than one GuideVersion with versionNumber "${number}".`,
+        );
+        continue;
+      }
+      seenNumbers.add(number);
+    }
+
+    // Rules 4-6: exactly zero or one Published version, pointer consistent.
+    const publishedVersions = own.filter((version) => version.status === "published");
+    if (publishedVersions.length > 1) {
+      issues.push(
+        `Guide "${guide.id}" has ${publishedVersions.length} Published GuideVersions (${publishedVersions
+          .map((version) => version.id)
+          .join(", ")}); at most one is allowed.`,
+      );
+    } else if (publishedVersions.length === 1) {
+      const only = publishedVersions[0]!;
+      if (guide.publishedVersionId !== only.id) {
+        issues.push(
+          `Guide "${guide.id}" has Published version "${only.id}" but publishedVersionId is "${guide.publishedVersionId ?? "null"}".`,
+        );
+      }
+    } else if (guide.publishedVersionId !== null) {
+      issues.push(
+        `Guide "${guide.id}" has no Published GuideVersion but publishedVersionId is "${guide.publishedVersionId}".`,
+      );
+    }
+  }
+
   if (issues.length > 0) {
     throw new AssociationValidationError(
       `Guide version validation failed with ${issues.length} issue(s):\n- ${issues.join("\n- ")}`,
@@ -160,3 +215,4 @@ export function validateGuideVersions(
     );
   }
 }
+
