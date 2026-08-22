@@ -19,6 +19,7 @@ import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as HelpIndexRouteImport } from './routes/help.index'
 import { Route as HelpBrowseRouteImport } from './routes/help.browse'
 import { Route as HelpSearchRouteImport } from './routes/help.search'
+import { Route as IntegrationAuraHelpRouteImport } from './routes/integration.aura-help'
 import { Route as LibraryIndexRouteImport } from './routes/library.index'
 import { Route as LibraryGuideIdRouteImport } from './routes/library.$guideId'
 import { Route as LibraryNewRouteImport } from './routes/library.new'
@@ -75,6 +76,11 @@ const HelpSearchRoute = HelpSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => HelpRoute,
 } as any)
+const IntegrationAuraHelpRoute = IntegrationAuraHelpRouteImport.update({
+  id: '/integration/aura-help',
+  path: '/integration/aura-help',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LibraryIndexRoute = LibraryIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/sources': typeof SourcesRoute
   '/help/browse': typeof HelpBrowseRoute
   '/help/search': typeof HelpSearchRoute
+  '/integration/aura-help': typeof IntegrationAuraHelpRoute
   '/library/$guideId': typeof LibraryGuideIdRoute
   '/library/new': typeof LibraryNewRoute
   '/help/': typeof HelpIndexRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/sources': typeof SourcesRoute
   '/help/browse': typeof HelpBrowseRoute
   '/help/search': typeof HelpSearchRoute
+  '/integration/aura-help': typeof IntegrationAuraHelpRoute
   '/library/$guideId': typeof LibraryGuideIdRoute
   '/library/new': typeof LibraryNewRoute
   '/help': typeof HelpIndexRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/sources': typeof SourcesRoute
   '/help/browse': typeof HelpBrowseRoute
   '/help/search': typeof HelpSearchRoute
+  '/integration/aura-help': typeof IntegrationAuraHelpRoute
   '/library/$guideId': typeof LibraryGuideIdRoute
   '/library/new': typeof LibraryNewRoute
   '/help/': typeof HelpIndexRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/sources'
     | '/help/browse'
     | '/help/search'
+    | '/integration/aura-help'
     | '/library/$guideId'
     | '/library/new'
     | '/help/'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/sources'
     | '/help/browse'
     | '/help/search'
+    | '/integration/aura-help'
     | '/library/$guideId'
     | '/library/new'
     | '/help'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/sources'
     | '/help/browse'
     | '/help/search'
+    | '/integration/aura-help'
     | '/library/$guideId'
     | '/library/new'
     | '/help/'
@@ -211,6 +223,7 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRouteWithChildren
   ReviewQueueRoute: typeof ReviewQueueRoute
   SourcesRoute: typeof SourcesRoute
+  IntegrationAuraHelpRoute: typeof IntegrationAuraHelpRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -284,6 +297,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/help/search'
       preLoaderRoute: typeof HelpSearchRouteImport
       parentRoute: typeof HelpRoute
+    }
+    '/integration/aura-help': {
+      id: '/integration/aura-help'
+      path: '/integration/aura-help'
+      fullPath: '/integration/aura-help'
+      preLoaderRoute: typeof IntegrationAuraHelpRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/library/': {
       id: '/library/'
@@ -364,6 +384,7 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRouteWithChildren,
   ReviewQueueRoute: ReviewQueueRoute,
   SourcesRoute: SourcesRoute,
+  IntegrationAuraHelpRoute: IntegrationAuraHelpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
