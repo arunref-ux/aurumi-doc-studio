@@ -139,10 +139,14 @@ export function createHelpRetrievalService(
       }
     }
 
-    // STEP 4 — deterministic published-only search fallback (Build 3B search).
-    const hits = await delivery.searchPublishedGuides(query);
-    if (hits.length > 0) {
-      const results = hits.map((hit) => toResult(hit.guide, labelByRefKey));
+    // STEP 4 — deterministic published-only search fallback. It COMPOSES the
+    // Build 3B published search capability (no second index, no raw scanning):
+    // the phrase is searched first, then individual signal tokens, and hits are
+    // merged with a fixed field weighting.
+    const searched = await searchDeterministically(query);
+    if (searched.length > 0) {
+      const results = searched.map((guide) => toResult(guide, labelByRefKey));
+
       return {
         query,
         outcome: "search-match",
