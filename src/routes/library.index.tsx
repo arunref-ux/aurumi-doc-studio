@@ -218,9 +218,15 @@ function LibraryPage() {
                     <td className="px-4 py-2.5">
                       <StatusBadge status={guide.currentVersion.status} />
                     </td>
+                    <td className="px-4 py-2.5">
+                      <ContentIndicator
+                        contentMarkdown={guide.currentVersion.contentMarkdown}
+                      />
+                    </td>
                     <td className="px-4 py-2.5 font-mono text-xs tabular-nums">
                       v{guide.currentVersion.versionNumber}
                     </td>
+
                     <td className="px-4 py-2.5">
                       <PrimaryContext guide={guide} />
                     </td>
