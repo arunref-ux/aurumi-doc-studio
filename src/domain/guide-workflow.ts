@@ -1,35 +1,51 @@
 import type { GuideVersionStatus } from "./types";
 
 /**
- * Build 2B — centralized GuideVersion workflow transition policy.
+ * Centralized GuideVersion workflow transition policy (Build 2B + Build 2C).
  *
  * The authoritative workflow state is `GuideVersion.status`. Nothing else may
  * decide whether a transition is legal: routes, components, commands and the
  * provider all consult this module. Guide carries no workflow status.
  *
- * Build 2B lifecycle:
+ * Lifecycle:
  *
  *   Draft --Submit for Review--> In Review
  *   In Review --Request Changes--> Draft
  *   In Review --Approve--> Approved
+ *   Approved --Publish--> Published
+ *   Published --(system) Supersede--> Archived
  *
- * Publishing / unpublishing / archiving are deliberately NOT part of this
- * build and therefore have no transition entry.
+ * The supersede transition is NOT a user action: it is applied automatically to
+ * the previously published version when a newer version is published.
+ * Unpublish / manual archive remain out of scope.
  */
 
-export type GuideWorkflowAction = "submit_for_review" | "request_changes" | "approve";
+export type GuideWorkflowAction =
+  | "submit_for_review"
+  | "request_changes"
+  | "approve"
+  | "publish";
+
+/** System-applied transitions. Never offered as a user action. */
+export type GuideVersionSystemAction = "supersede";
+
+/** Anything recordable on the version-level workflow history. */
+export type GuideVersionEventAction = GuideWorkflowAction | GuideVersionSystemAction;
 
 export const GUIDE_WORKFLOW_ACTION_LABELS: Record<GuideWorkflowAction, string> = {
   submit_for_review: "Submit for Review",
   request_changes: "Request Changes",
   approve: "Approve",
+  publish: "Publish",
 };
 
 /** Past-tense phrasing used by the workflow history feed. */
-export const GUIDE_WORKFLOW_EVENT_LABELS: Record<GuideWorkflowAction, string> = {
+export const GUIDE_WORKFLOW_EVENT_LABELS: Record<GuideVersionEventAction, string> = {
   submit_for_review: "Submitted for review",
   request_changes: "Changes requested",
   approve: "Approved",
+  publish: "Published",
+  supersede: "Superseded by a newer published version",
 };
 
 /**
@@ -41,8 +57,17 @@ const TRANSITIONS: Partial<
 > = {
   draft: { submit_for_review: "in-review" },
   "in-review": { request_changes: "draft", approve: "approved" },
-  // approved / published / archived intentionally have no Build 2B transitions.
+  approved: { publish: "published" },
+  // published / archived have no user-driven transition in this build.
 };
+
+/** System transition table, kept separate so it can never be user-triggered. */
+const SYSTEM_TRANSITIONS: Partial<
+  Record<GuideVersionStatus, Partial<Record<GuideVersionSystemAction, GuideVersionStatus>>>
+> = {
+  published: { supersede: "archived" },
+};
+
 
 export class InvalidGuideVersionTransitionError extends Error {
   constructor(
@@ -76,10 +101,27 @@ export function resolveGuideVersionTransition(
 
 /** Available workflow actions for a status, in display order. */
 export function availableWorkflowActions(fromStatus: GuideVersionStatus): GuideWorkflowAction[] {
-  return (Object.keys(GUIDE_WORKFLOW_ACTION_LABELS) as GuideWorkflowAction[]).filter(
-    (action) => canTransitionGuideVersion(fromStatus, action) !== null,
+  return (Object.keys(GUIDE_WORKFLOW_ACTION_LABELS) as GuideVersionEventAction[]).filter(
+    (action): action is GuideWorkflowAction =>
+      action !== "supersede" &&
+      canTransitionGuideVersion(fromStatus, action as GuideWorkflowAction) !== null,
   );
 }
+
+/**
+ * Build 2C: system supersede transition. Used only when a newer version is
+ * published, to archive the version that was published before it.
+ */
+export function resolveSupersedeTransition(fromStatus: GuideVersionStatus): GuideVersionStatus {
+  const next = SYSTEM_TRANSITIONS[fromStatus]?.supersede;
+  if (!next) {
+    throw new Error(
+      `A version with status "${fromStatus}" cannot be superseded; only a published version can.`,
+    );
+  }
+  return next;
+}
+
 
 export class StaleGuideVersionError extends Error {
   constructor(message: string) {
@@ -115,7 +157,8 @@ export interface GuideVersionWorkflowEvent {
   id: string;
   guideId: string;
   guideVersionId: string;
-  action: GuideWorkflowAction;
+  action: GuideVersionEventAction;
+
   fromStatus: GuideVersionStatus;
   toStatus: GuideVersionStatus;
   performedAt: string;

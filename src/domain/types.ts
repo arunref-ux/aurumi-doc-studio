@@ -151,13 +151,30 @@ export {
  * `@/domain/guide-workflow`; re-exported here for convenience. Never re-derive
  * transition rules inline.
  */
-export type { GuideWorkflowAction, GuideVersionWorkflowEvent } from "./guide-workflow";
+export type {
+  GuideWorkflowAction,
+  GuideVersionSystemAction,
+  GuideVersionEventAction,
+  GuideVersionWorkflowEvent,
+} from "./guide-workflow";
 export {
   GUIDE_WORKFLOW_ACTION_LABELS,
   GUIDE_WORKFLOW_EVENT_LABELS,
   availableWorkflowActions,
   canTransitionGuideVersion,
+  resolveSupersedeTransition,
 } from "./guide-workflow";
+
+/**
+ * Build 2C version-creation policy lives in `@/domain/guide-versioning`;
+ * re-exported for convenience. Never re-derive these rules inline.
+ */
+export {
+  IN_FLIGHT_VERSION_STATUSES,
+  canCreateDraftVersion,
+  nextDraftVersionNumber,
+  versionIsInFlight,
+} from "./guide-versioning";
 
 export type AssociationKind = ReferenceKind;
 
@@ -198,7 +215,14 @@ export interface Guide {
   slug: string;
   summary: string;
   guideType: GuideType;
+  /** The version currently being worked on (authoring / review / publish target). */
   currentVersionId: string;
+  /**
+   * Build 2C: the version currently published to users, if any. Deliberately
+   * separate from `currentVersionId` — a guide can be publicly published on one
+   * version while a newer draft is authored.
+   */
+  publishedVersionId: string | null;
   owner: string;
   createdAt: string;
   updatedAt: string;
@@ -207,7 +231,10 @@ export interface Guide {
 
 /** Read model handed to the UI: version relationship resolved. */
 export interface GuideWithVersion extends Guide {
+  /** Resolved working version (`currentVersionId`). */
   currentVersion: GuideVersion;
+  /** Resolved published version (`publishedVersionId`), or null when never published. */
+  publishedVersion: GuideVersion | null;
   versions: GuideVersion[];
 }
 

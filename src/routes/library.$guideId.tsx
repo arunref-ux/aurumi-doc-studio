@@ -107,11 +107,20 @@ function GuideDetailPage() {
         </div>
 
         <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-4 text-sm md:grid-cols-5">
-          <Meta label="Current version" value={`v${data.currentVersion.versionNumber}`} mono />
+          <Meta label="Working version" value={`v${data.currentVersion.versionNumber}`} mono />
+          <Meta
+            label="Published version"
+            value={
+              data.publishedVersion ? `v${data.publishedVersion.versionNumber}` : "Not published"
+            }
+            mono
+          />
           <Meta label="Owner" value={data.owner} />
           <Meta label="Last updated" value={formatDate(data.updatedAt)} />
-          <Meta label="Created" value={formatDate(data.createdAt)} />
-          <Meta label="Published" value={formatDate(data.currentVersion.publishedAt)} />
+          <Meta
+            label="Published"
+            value={formatDate(data.publishedVersion?.publishedAt ?? null)}
+          />
         </dl>
 
         {/* Build 2B: review & approval actions for the current GuideVersion. */}
@@ -124,8 +133,8 @@ function GuideDetailPage() {
         <h2 className="label-caps mb-2">Summary</h2>
         <p className="max-w-3xl text-sm leading-relaxed text-foreground/90">{data.summary}</p>
         <p className="mt-4 rounded-md border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-          Review and approval run on the current GuideVersion. Publishing arrives in Build 2C —
-          Publishing and Version Lifecycle.
+          Review, approval and publishing run on the working GuideVersion. The published version
+          stays live for users until a newer version is published.
         </p>
       </section>
 
@@ -178,7 +187,11 @@ function GuideDetailPage() {
             </div>
           </section>
 
-          <VersionHistory guideId={data.id} currentVersionId={data.currentVersionId} />
+          <VersionHistory
+            guideId={data.id}
+            currentVersionId={data.currentVersionId}
+            publishedVersionId={data.publishedVersionId}
+          />
 
           <WorkflowHistory guideId={data.id} />
 
@@ -304,16 +317,20 @@ function AssocChip({ assoc, trail }: { assoc: GuideAssociation; trail: string })
 function VersionHistory({
   guideId,
   currentVersionId,
+  publishedVersionId,
 }: {
   guideId: string;
   currentVersionId: string;
+  publishedVersionId: string | null;
 }) {
   const versions = useQuery(guideQueries.versions(guideId));
   return (
     <section className="panel">
       <div className="border-b border-border px-4 py-3">
         <h2 className="text-sm font-semibold">Version history</h2>
-        <p className="text-xs text-muted-foreground">Guide Studio-owned lifecycle records</p>
+        <p className="text-xs text-muted-foreground">
+          Guide Studio-owned lifecycle records — working vs live version
+        </p>
       </div>
       {versions.isPending ? (
         <LoadingRows rows={2} />
@@ -333,7 +350,8 @@ function VersionHistory({
               <span className="font-mono text-xs">v{version.versionNumber}</span>
               <StatusBadge status={version.status} />
               <span className="ml-auto text-xs text-muted-foreground">
-                {version.id === currentVersionId ? "Current · " : ""}
+                {version.id === currentVersionId ? "Working · " : ""}
+                {version.id === publishedVersionId ? "Live · " : ""}
                 {formatDate(version.publishedAt ?? version.updatedAt)}
               </span>
             </li>

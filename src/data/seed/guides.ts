@@ -496,6 +496,18 @@ export const seedGuideVersions: GuideVersion[] = seeds.flatMap((seed) => [
   },
 ]);
 
+/**
+ * The published version is derived, never hand-maintained: it is the single
+ * version of the guide whose status is "published" (Build 2C separates the
+ * working version from the published version).
+ */
+function publishedVersionIdOf(seedId: string): string | null {
+  const published = seedGuideVersions.filter(
+    (version) => version.guideId === seedId && version.status === "published",
+  );
+  return published.length > 0 ? published[published.length - 1]!.id : null;
+}
+
 export const seedGuides: Guide[] = seeds.map((seed) => ({
   id: seed.id,
   title: seed.title,
@@ -503,6 +515,7 @@ export const seedGuides: Guide[] = seeds.map((seed) => ({
   summary: seed.summary,
   guideType: seed.guideType,
   currentVersionId: `${seed.id}-v${seed.currentVersion}`,
+  publishedVersionId: publishedVersionIdOf(seed.id),
   owner: seed.owner,
   createdAt: seed.createdAt,
   updatedAt: seed.updatedAt,

@@ -108,6 +108,17 @@ export interface GuideWorkflowTransitionInput {
 }
 
 /**
+ * Build 2C: create the next Draft version of an existing Guide. The provider
+ * assigns the version number and copies content from the source version.
+ */
+export interface CreateGuideDraftVersionInput {
+  guideId: string;
+  /** Expected current GuideVersion id — guards against stale UI state. */
+  guideVersionId: string;
+  actor: string;
+}
+
+/**
  * Guide Studio owns Guides, GuideVersions and GuideAssociations only.
  * It never enumerates external hierarchies.
  */
@@ -150,6 +161,17 @@ export interface GuideStudioProvider {
   submitGuideVersionForReview(input: GuideWorkflowTransitionInput): Promise<GuideWithVersion>;
   requestGuideVersionChanges(input: GuideWorkflowTransitionInput): Promise<GuideWithVersion>;
   approveGuideVersion(input: GuideWorkflowTransitionInput): Promise<GuideWithVersion>;
+  /**
+   * Build 2C: publish an Approved version. Atomically sets the version to
+   * Published, points `publishedVersionId` at it and archives (supersedes) the
+   * previously published version.
+   */
+  publishGuideVersion(input: GuideWorkflowTransitionInput): Promise<GuideWithVersion>;
+  /**
+   * Build 2C: create a new Draft version from the guide's current version and
+   * make it the working version. The published version is untouched.
+   */
+  createGuideDraftVersion(input: CreateGuideDraftVersionInput): Promise<GuideWithVersion>;
 }
 
 

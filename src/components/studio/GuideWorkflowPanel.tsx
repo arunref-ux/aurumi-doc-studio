@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Loader2, Lock, Send, TriangleAlert, Undo2 } from "lucide-react";
+import { CheckCircle2, FilePlus2, Loader2, Lock, Rocket, Send, TriangleAlert, Undo2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useAuthorization } from "@/auth/AuthorizationContext";
 import { guideCommands } from "@/commands/guide-commands";
@@ -22,6 +22,7 @@ import {
   availableWorkflowActions,
   type GuideWorkflowAction,
 } from "@/domain/guide-workflow";
+import { canCreateDraftVersion } from "@/domain/guide-versioning";
 import type { GuideWithVersion } from "@/domain/types";
 
 /**
@@ -40,12 +41,14 @@ const ACTION_KEYS: Record<GuideWorkflowAction, GuideActionKey> = {
   submit_for_review: "guide.action.submit_for_review",
   request_changes: "guide.action.request_changes",
   approve: "guide.action.approve",
+  publish: "guide.action.publish",
 };
 
 const ACTION_ICONS: Record<GuideWorkflowAction, ReactNode> = {
   submit_for_review: <Send className="size-3.5" />,
   request_changes: <Undo2 className="size-3.5" />,
   approve: <CheckCircle2 className="size-3.5" />,
+  publish: <Rocket className="size-3.5" />,
 };
 
 export function GuideWorkflowPanel({
@@ -63,13 +66,19 @@ export function GuideWorkflowPanel({
   const submit = useGuideCommand(guideCommands.submitForReview);
   const requestChanges = useGuideCommand(guideCommands.requestChanges);
   const approve = useGuideCommand(guideCommands.approve);
+  const publish = useGuideCommand(guideCommands.publish);
+  const createDraftVersion = useGuideCommand(guideCommands.createDraftVersion);
 
-  const [pending, setPending] = useState<GuideWorkflowAction | null>(null);
+  const [pending, setPending] = useState<GuideWorkflowAction | "new_draft" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
   const [note, setNote] = useState("");
 
   const version = guide.currentVersion;
+  const publishedVersion = guide.publishedVersion;
+  // Build 2C: creating the next draft is governed by the centralized policy.
+  const canCreateDraft =
+    canCreateDraftVersion(version.status) && canRunAction("guide.action.create_version");
   const actions = availableWorkflowActions(version.status).filter((action) =>
     canRunAction(ACTION_KEYS[action]),
   );
@@ -86,6 +95,7 @@ export function GuideWorkflowPanel({
     try {
       if (action === "submit_for_review") await submit(input);
       else if (action === "request_changes") await requestChanges(input);
+      else if (action === "publish") await publish(input);
       else await approve(input);
       await queryClient.invalidateQueries();
       setNoteOpen(false);
@@ -97,19 +107,51 @@ export function GuideWorkflowPanel({
     }
   };
 
+  const runNewDraftVersion = async () => {
+    setPending("new_draft");
+    setError(null);
+    try {
+      await createDraftVersion({
+        guideId: guide.id,
+        guideVersionId: version.id,
+        actor: user?.name ?? "Unknown user",
+      });
+      await queryClient.invalidateQueries();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not create a new draft version.");
+    } finally {
+      setPending(null);
+    }
+  };
+
   const submitBlockedByDirty = dirty && actions.includes("submit_for_review");
 
   const body = (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
+        <span className="label-caps">Working</span>
         <span className="font-mono text-xs">Version {version.versionNumber}</span>
         <StatusBadge status={version.status} />
+        <span className="text-xs text-muted-foreground">·</span>
+        <span className="label-caps">Live for users</span>
+        {publishedVersion ? (
+          <span className="font-mono text-xs">
+            Version {publishedVersion.versionNumber}
+            {publishedVersion.id === version.id ? " (this version)" : ""}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">Not published yet</span>
+        )}
         {version.status !== "draft" ? (
           <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <Lock className="size-3.5" />
             {version.status === "approved"
-              ? "Approved — read-only. Publishing arrives in a later build."
-              : "In review — details, content and associations are read-only."}
+              ? "Approved — read-only. Publish to make this version live for users."
+              : version.status === "published"
+                ? "Published — live for users. Create a new draft version to make further changes."
+                : version.status === "archived"
+                  ? "Archived — superseded by a newer published version."
+                  : "In review — details, content and associations are read-only."}
           </span>
         ) : null}
       </div>
@@ -136,7 +178,7 @@ export function GuideWorkflowPanel({
               <Button
                 key={action}
                 size="sm"
-                variant={action === "approve" ? "default" : "outline"}
+                variant={action === "approve" || action === "publish" ? "default" : "outline"}
                 disabled={disabled}
                 onClick={() => {
                   if (action === "request_changes") {
@@ -157,6 +199,28 @@ export function GuideWorkflowPanel({
           })}
         </div>
       )}
+
+      {canCreateDraft ? (
+        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={pending !== null}
+            onClick={() => void runNewDraftVersion()}
+          >
+            {pending === "new_draft" ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <FilePlus2 className="size-3.5" />
+            )}
+            New Draft Version
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Starts the next version from v{version.versionNumber}. The published version stays live
+            for users.
+          </span>
+        </div>
+      ) : null}
 
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
 

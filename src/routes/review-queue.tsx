@@ -49,7 +49,7 @@ function ReviewQueuePage() {
         <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
           <Clock className="size-3.5" /> Coming later
         </span>{" "}
-        · Reviewer assignment, comment threads and publishing (Build 2C).
+        · Reviewer assignment and comment threads arrive later.
       </div>
 
       <section>
@@ -78,7 +78,7 @@ function ReviewQueuePage() {
       <QueueSection title="In review" description="Awaiting reviewer sign-off." query={pending} />
       <QueueSection
         title="Approved, awaiting publish"
-        description="Content approved and read-only; publishing arrives in Build 2C."
+        description="Content approved and read-only; publish to make it live for users."
         query={approved}
       />
     </div>

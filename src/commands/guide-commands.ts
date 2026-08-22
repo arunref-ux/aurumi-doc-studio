@@ -118,6 +118,33 @@ export const approveGuideVersionCommand = defineCommand<
   GuideWithVersion
 >("guide.action.approve", (input) => providers.guideStudio.approveGuideVersion(input));
 
+/* ------------------------------------------------------------------ */
+/* Build 2C — publishing & version lifecycle commands                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Publishing an Approved version. The provider re-validates the lifecycle
+ * transition and archives the previously published version atomically.
+ */
+export const publishGuideVersionCommand = defineCommand<
+  GuideWorkflowCommandInput,
+  GuideWithVersion
+>("guide.action.publish", (input) => providers.guideStudio.publishGuideVersion(input));
+
+export interface CreateGuideDraftVersionCommandInput {
+  guideId: string;
+  guideVersionId: string;
+  actor: string;
+}
+
+/** Creating the next Draft version of an existing Guide. */
+export const createGuideDraftVersionCommand = defineCommand<
+  CreateGuideDraftVersionCommandInput,
+  GuideWithVersion
+>("guide.action.create_version", (input) =>
+  providers.guideStudio.createGuideDraftVersion(input),
+);
+
 /** Later-build lifecycle mutations — authorization policy already centralized. */
 export const guideCommands = {
   createGuide: createGuideCommand,
@@ -128,7 +155,8 @@ export const guideCommands = {
   review: definePlannedCommand<{ guideId: string }>("guide.action.review"),
   approve: approveGuideVersionCommand,
   requestChanges: requestGuideChangesCommand,
-  publish: definePlannedCommand<{ guideId: string }>("guide.action.publish"),
+  publish: publishGuideVersionCommand,
+  createDraftVersion: createGuideDraftVersionCommand,
   unpublish: definePlannedCommand<{ guideId: string }>("guide.action.unpublish"),
   archive: definePlannedCommand<{ guideId: string }>("guide.action.archive"),
 } as const;

@@ -37,7 +37,7 @@ export const SEEDED_USERS: AuthorizedUser[] = [
     id: "usr-priya-shah",
     name: "Priya Shah",
     baseRole: "Admin",
-    permissionProfileLabel: "Publishing Access (not used in Build 2B)",
+    permissionProfileLabel: "Publisher (publish · unpublish · archive)",
     effectivePermissions: [
       GUIDE_PERMISSIONS.publish,
       GUIDE_PERMISSIONS.unpublish,

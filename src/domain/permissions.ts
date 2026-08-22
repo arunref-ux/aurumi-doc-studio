@@ -122,6 +122,7 @@ export const PERMISSION_LABELS: Record<GuidePermission, string> = PERMISSION_CAT
 export type GuideActionKey =
   | "guide.action.create"
   | "guide.action.edit"
+  | "guide.action.create_version"
   | "guide.action.submit_for_review"
   | "guide.action.review"
   | "guide.action.approve"
@@ -149,6 +150,13 @@ export const GUIDE_ACTIONS: Record<GuideActionKey, GuideActionDefinition> = {
   "guide.action.edit": {
     key: "guide.action.edit",
     label: "Edit Guide",
+    requires: [GUIDE_PERMISSIONS.edit],
+    availableInBuild: 2,
+  },
+  "guide.action.create_version": {
+    key: "guide.action.create_version",
+    label: "New Draft Version",
+    // Creating the next draft of an existing guide is an authoring action.
     requires: [GUIDE_PERMISSIONS.edit],
     availableInBuild: 2,
   },
