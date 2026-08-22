@@ -4,7 +4,10 @@ import { useState, type ReactNode } from "react";
 import { useAuthorization } from "@/auth/AuthorizationContext";
 import { guideCommands } from "@/commands/guide-commands";
 import { useGuideCommand } from "@/commands/useGuideCommand";
+import { ContentIndicator } from "@/components/studio/ContentIndicator";
 import { StatusBadge } from "@/components/studio/StatusBadge";
+import { versionHasContent } from "@/domain/guide-content";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
