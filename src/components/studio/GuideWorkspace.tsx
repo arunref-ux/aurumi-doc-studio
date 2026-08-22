@@ -24,6 +24,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { guideCommands } from "@/commands/guide-commands";
 import { useGuideCommand } from "@/commands/useGuideCommand";
+import { GuideWorkflowPanel } from "@/components/studio/GuideWorkflowPanel";
+import { WorkflowHistory } from "@/components/studio/WorkflowHistory";
 import { MarkdownPreview } from "@/components/studio/content/MarkdownPreview";
 import { RichContentEditor } from "@/components/studio/content/RichContentEditor";
 import { REFERENCE_KIND_LABELS, refKey } from "@/domain/external-ref";
@@ -229,6 +231,13 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
         </div>
       ) : null}
 
+      {/*
+        Build 2B: workflow actions for the current GuideVersion. Submit for
+        Review is blocked while the editing session is dirty — the user saves
+        the draft first; there is no auto-save and no "Save and Submit".
+      */}
+      {guide ? <GuideWorkflowPanel guide={guide} dirty={dirty} /> : null}
+
       <Tabs defaultValue="details">
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
@@ -407,6 +416,8 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
           </section>
         </TabsContent>
       </Tabs>
+
+      {guide ? <WorkflowHistory guideId={guide.id} /> : null}
     </div>
   );
 }
