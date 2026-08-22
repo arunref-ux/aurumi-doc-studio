@@ -138,6 +138,24 @@ function GuideDetailPage() {
         </p>
       </section>
 
+      {/* Read-only content of the working version — what a reviewer reads. */}
+      <section className="panel">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+          <div>
+            <h2 className="text-sm font-semibold">Guide content</h2>
+            <p className="text-xs text-muted-foreground">
+              Read-only rendering of working version v{data.currentVersion.versionNumber}.
+            </p>
+          </div>
+          <StatusBadge status={data.currentVersion.status} />
+        </div>
+        <MarkdownPreview
+          markdown={data.currentVersion.contentMarkdown}
+          emptyState="This version has no content yet."
+        />
+      </section>
+
+
       <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
         <section className="panel" id="associations">
           <div className="border-b border-border px-4 py-3">
