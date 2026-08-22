@@ -81,6 +81,35 @@ export function availableWorkflowActions(fromStatus: GuideVersionStatus): GuideW
   );
 }
 
+export class StaleGuideVersionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "StaleGuideVersionError";
+  }
+}
+
+/**
+ * Strict version identity rule (Build 2B hardening): a workflow command must
+ * supply an explicit, non-blank GuideVersion ID that exactly equals the guide's
+ * current version ID. No truthiness fallback, no implicit "current version".
+ */
+export function requireCurrentGuideVersion(
+  suppliedVersionId: string | null | undefined,
+  currentVersionId: string,
+): string {
+  if (typeof suppliedVersionId !== "string" || suppliedVersionId.trim().length === 0) {
+    throw new StaleGuideVersionError(
+      "A workflow action requires an explicit guideVersionId identifying the current version.",
+    );
+  }
+  if (suppliedVersionId !== currentVersionId) {
+    throw new StaleGuideVersionError(
+      `Version ${suppliedVersionId} is not the current version (${currentVersionId}); reload the guide and retry.`,
+    );
+  }
+  return suppliedVersionId;
+}
+
 /** Minimal version-level audit record. Not a comment system. */
 export interface GuideVersionWorkflowEvent {
   id: string;
