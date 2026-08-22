@@ -1,8 +1,12 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { useState } from "react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
+import { MarkdownPreview } from "@/components/studio/content/MarkdownPreview";
+import { contentIsEmpty } from "@/domain/guide-content";
 import { PageHeader } from "@/components/studio/PageHeader";
+
 import { StatusBadge } from "@/components/studio/StatusBadge";
 import {
   GUIDE_STATUS_LABELS,
@@ -111,34 +115,64 @@ function QueueSection({
       ) : (
         <ul className="divide-y divide-border">
           {guides.map((guide) => (
-            <li key={guide.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5">
-              <div className="min-w-48 flex-1">
-                <Link
-                  to="/library/$guideId"
-                  params={{ guideId: guide.id }}
-                  className="text-sm font-medium hover:underline"
-                >
-                  {guide.title}
-                </Link>
-                <p className="text-xs text-muted-foreground">
-                  {GUIDE_TYPE_LABELS[guide.guideType]} · {guide.owner}
-                </p>
-              </div>
-              <StatusBadge status={guide.currentVersion.status} />
-              <Link
-                to="/library/$guideId"
-                params={{ guideId: guide.id }}
-                className="text-xs font-medium text-foreground hover:underline"
-              >
-                Open workflow →
-              </Link>
-              <span className="w-40 text-right text-xs text-muted-foreground">
-                {formatDate(guide.updatedAt)} · {relativeDays(guide.updatedAt)}
-              </span>
-            </li>
+            <QueueRow key={guide.id} guide={guide} />
           ))}
         </ul>
       )}
     </section>
   );
 }
+
+function QueueRow({ guide }: { guide: GuideWithVersion }) {
+  const [open, setOpen] = useState(false);
+  const hasContent = !contentIsEmpty(guide.currentVersion.contentMarkdown);
+
+  return (
+    <li className="px-4 py-2.5">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="min-w-48 flex-1">
+          <Link
+            to="/library/$guideId"
+            params={{ guideId: guide.id }}
+            className="text-sm font-medium hover:underline"
+          >
+            {guide.title}
+          </Link>
+          <p className="text-xs text-muted-foreground">
+            {GUIDE_TYPE_LABELS[guide.guideType]} · {guide.owner} · v
+            {guide.currentVersion.versionNumber}
+          </p>
+        </div>
+        <StatusBadge status={guide.currentVersion.status} />
+        <button
+          type="button"
+          onClick={() => setOpen((value: boolean) => !value)}
+          className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline"
+          aria-expanded={open}
+        >
+          {open ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+          {open ? "Hide content" : hasContent ? "Read content" : "No content"}
+        </button>
+        <Link
+          to="/library/$guideId"
+          params={{ guideId: guide.id }}
+          className="text-xs font-medium text-foreground hover:underline"
+        >
+          Open workflow →
+        </Link>
+        <span className="w-40 text-right text-xs text-muted-foreground">
+          {formatDate(guide.updatedAt)} · {relativeDays(guide.updatedAt)}
+        </span>
+      </div>
+      {open ? (
+        <div className="mt-2 rounded-md border border-border bg-card">
+          <MarkdownPreview
+            markdown={guide.currentVersion.contentMarkdown}
+            emptyState="This version has no content yet."
+          />
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
