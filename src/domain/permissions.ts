@@ -173,8 +173,8 @@ export const GUIDE_ACTIONS: Record<GuideActionKey, GuideActionDefinition> = {
   "guide.action.request_changes": {
     key: "guide.action.request_changes",
     label: "Request Changes",
-    // Build 2B mapping: Request Changes is a reviewer capability.
-    requires: [GUIDE_PERMISSIONS.review, GUIDE_PERMISSIONS.requestChanges],
+    // Build 2B mapping: Request Changes requires exactly guide.review.
+    requires: [GUIDE_PERMISSIONS.review],
     availableInBuild: 2,
   },
   "guide.action.publish": {
