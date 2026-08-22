@@ -6,6 +6,8 @@ import { ActionButton } from "@/components/studio/PermissionGate";
 import { GuideWorkflowPanel } from "@/components/studio/GuideWorkflowPanel";
 import { WorkflowHistory } from "@/components/studio/WorkflowHistory";
 import { SourceChip } from "@/components/studio/SourceChip";
+import { MarkdownPreview } from "@/components/studio/content/MarkdownPreview";
+
 import { StatusBadge } from "@/components/studio/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
