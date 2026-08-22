@@ -146,6 +146,19 @@ export {
   providesPublishedCoverage,
 } from "./guide-lifecycle";
 
+/**
+ * Workflow transition policy and the version-level workflow audit model live in
+ * `@/domain/guide-workflow`; re-exported here for convenience. Never re-derive
+ * transition rules inline.
+ */
+export type { GuideWorkflowAction, GuideVersionWorkflowEvent } from "./guide-workflow";
+export {
+  GUIDE_WORKFLOW_ACTION_LABELS,
+  GUIDE_WORKFLOW_EVENT_LABELS,
+  availableWorkflowActions,
+  canTransitionGuideVersion,
+} from "./guide-workflow";
+
 export type AssociationKind = ReferenceKind;
 
 /** Normalized association record keyed by composite external identity. */
