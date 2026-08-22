@@ -35,7 +35,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
-import { isValidContentUrl, STARTER_CONTENT_MARKDOWN } from "@/domain/guide-content";
+import {
+  isSafeImageUrl,
+  isValidContentUrl,
+  STARTER_CONTENT_MARKDOWN,
+} from "@/domain/guide-content";
 
 /**
  * Rich content authoring interface (Build 2A.2).
@@ -264,16 +268,21 @@ function Toolbar({ editor }: { editor: Editor }) {
 /* URL-based insertion dialogs (no upload/storage infrastructure)      */
 /* ------------------------------------------------------------------ */
 
-function useUrlField(initial = "") {
+function useUrlField(
+  initial = "",
+  validate: (value: string) => boolean = isValidContentUrl,
+) {
   const [url, setUrl] = useState(initial);
   const [touched, setTouched] = useState(false);
-  const valid = isValidContentUrl(url);
+  const valid = validate(url);
   return { url, setUrl, touched, setTouched, valid };
 }
 
-function UrlError({ show }: { show: boolean }) {
+function UrlError({ show, message }: { show: boolean; message?: string }) {
   return show ? (
-    <p className="text-xs text-destructive">Enter a valid http(s) URL.</p>
+    <p className="text-xs text-destructive">
+      {message ?? "Enter a valid http(s) URL."}
+    </p>
   ) : null;
 }
 
@@ -335,15 +344,18 @@ function LinkDialog({ editor }: { editor: Editor }) {
 function ImageDialog({ editor }: { editor: Editor }) {
   const [open, setOpen] = useState(false);
   const [alt, setAlt] = useState("");
-  const field = useUrlField();
+  // Images are dereferenced by the browser: http(s) only, no mailto:/data:/etc.
+  const field = useUrlField("", isSafeImageUrl);
 
   const apply = () => {
-    if (!field.valid) {
+    const src = field.url.trim();
+    // Insertion boundary guard — an unsafe image can never enter the Markdown.
+    if (!isSafeImageUrl(src)) {
       field.setTouched(true);
       return;
     }
     // Markdown image syntax: ![alt](url). No binary data is ever embedded.
-    editor.chain().focus().setImage({ src: field.url.trim(), alt: alt.trim() }).run();
+    editor.chain().focus().setImage({ src, alt: alt.trim() }).run();
     setOpen(false);
     field.setUrl("");
     setAlt("");
@@ -372,7 +384,10 @@ function ImageDialog({ editor }: { editor: Editor }) {
               onChange={(event) => field.setUrl(event.target.value)}
               placeholder="https://…/deal-form.png"
             />
-            <UrlError show={field.touched && !field.valid} />
+            <UrlError
+              show={field.touched && !field.valid}
+              message="Image URLs must start with http:// or https://."
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="image-alt">Alt text (optional)</Label>

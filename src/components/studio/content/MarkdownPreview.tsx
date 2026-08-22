@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { contentIsEmpty, youTubeEmbedUrl } from "@/domain/guide-content";
+import { contentIsEmpty, isSafeImageUrl, youTubeEmbedUrl } from "@/domain/guide-content";
 
 /**
  * Authoring preview (Build 2A.2) — NOT the public Help Portal.
@@ -26,7 +26,7 @@ export function MarkdownPreview({ markdown }: { markdown: string }) {
           FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form"],
           FORBID_ATTR: ["style", "srcdoc", "onerror", "onload"],
         });
-        if (!cancelled) setHtml(safe);
+        if (!cancelled) setHtml(neutralizeUnsafeImages(safe));
       } catch {
         if (!cancelled) setHtml(null);
       }
@@ -86,6 +86,26 @@ export function MarkdownPreview({ markdown }: { markdown: string }) {
       ) : null}
     </div>
   );
+}
+
+/**
+ * Second safety gate for images: even if persisted Markdown already contains an
+ * image with a non-http(s) source, it is never rendered as an active image. The
+ * <img> is replaced by inert text so nothing is executed or dereferenced.
+ */
+function neutralizeUnsafeImages(html: string): string {
+  if (typeof document === "undefined") return html;
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  for (const img of Array.from(template.content.querySelectorAll("img"))) {
+    const src = img.getAttribute("src") ?? "";
+    if (isSafeImageUrl(src)) continue;
+    const note = document.createElement("span");
+    note.className = "text-xs text-muted-foreground";
+    note.textContent = `[Blocked image reference: unsupported URL scheme]`;
+    img.replaceWith(note);
+  }
+  return template.innerHTML;
 }
 
 interface VideoReference {
