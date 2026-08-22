@@ -119,3 +119,37 @@ export const coverageQueries = {
       retry: composedRetry,
     }),
 };
+
+/**
+ * Build 3A — Published Guide Delivery access. The internal demonstration
+ * surface uses exactly the contract future Help consumers will use; published
+ * resolution never happens in components.
+ */
+export const publishedDeliveryQueries = {
+  list: () =>
+    queryOptions({
+      queryKey: ["published-delivery", "list"],
+      queryFn: () => publishedGuideDelivery.listPublishedGuides(),
+      retry,
+    }),
+  detail: (guideId: string | null) =>
+    queryOptions({
+      queryKey: ["published-delivery", "detail", guideId],
+      queryFn: () => publishedGuideDelivery.getPublishedGuide(guideId!),
+      enabled: Boolean(guideId),
+      retry,
+    }),
+  associationTargets: () =>
+    queryOptions({
+      queryKey: ["published-delivery", "association-targets"],
+      queryFn: () => publishedGuideDelivery.listPublishedAssociationTargets(),
+      retry,
+    }),
+  byAssociation: (query: PublishedGuideRefQuery | null) =>
+    queryOptions({
+      queryKey: ["published-delivery", "by-association", query],
+      queryFn: () => publishedGuideDelivery.getPublishedGuidesByAssociation(query!),
+      enabled: Boolean(query),
+      retry,
+    }),
+};
