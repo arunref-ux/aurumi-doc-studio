@@ -171,14 +171,13 @@ function AuraHelpIntegrationDemo() {
                 <p className="mt-3 text-[0.6875rem] uppercase tracking-wide text-muted-foreground">
                   Request context ({selected.kindLabel})
                 </p>
-                <ul className="mt-1 space-y-0.5 text-xs text-foreground">
-                  {selected.refs.map((ref) => (
-                    <li key={`${ref.kind}-${ref.externalId}`}>
-                      {selected.label.split(" → ").length > 1 ? "• " : ""}
-                      {ref.kind} reference
-                    </li>
-                  ))}
-                </ul>
+                <p className="mt-1 text-xs text-foreground">
+                  {selected.refs.length === 1
+                    ? "1 composite reference"
+                    : `${selected.refs.length} composite references`}{" "}
+                  sent with every question · {selected.publishedGuideCount} published guide
+                  {selected.publishedGuideCount === 1 ? "" : "s"}
+                </p>
                 <Button
                   variant="outline"
                   size="sm"

@@ -43,9 +43,9 @@ const SPECIFIC_KINDS = new Set<string>(["feature", "intent", "capability"]);
 
 /** Words carrying no deterministic retrieval signal on their own. */
 const STOP_WORDS = new Set([
-  "a", "an", "and", "are", "as", "at", "be", "can", "configure", "create", "do", "does", "for",
-  "from", "get", "help", "how", "i", "in", "is", "it", "me", "my", "of", "on", "one", "or", "set",
-  "show", "the", "this", "to", "up", "use", "what", "when", "where", "which", "why", "with", "you",
+  "a", "an", "and", "are", "as", "at", "be", "can", "do", "does", "for", "from", "get", "help",
+  "how", "i", "in", "is", "it", "me", "my", "of", "on", "one", "or", "show", "the", "this", "to",
+  "up", "use", "what", "when", "where", "which", "why", "with", "you",
 ]);
 
 export function createHelpRetrievalService(
@@ -195,21 +195,18 @@ export function createHelpRetrievalService(
       (a, b) => kindRank(a.kind) - kindRank(b.kind) || a.kind.localeCompare(b.kind),
     );
 
-    const seen = new Set<string>();
-    const candidates: PublishedGuide[] = [];
+    // Most specific reference wins: when a Feature / Intent / Capability has
+    // published Help, the broader App / Topic / Connector context is not mixed
+    // in. Within a single reference, results stay many-to-many.
     for (const ref of ordered) {
       const guides = await delivery.getPublishedGuidesByAssociation({
         source: ref.source,
         kind: ref.kind,
         externalId: ref.externalId,
       });
-      for (const guide of [...guides].sort(comparePublishedGuides)) {
-        if (seen.has(guide.guideId)) continue;
-        seen.add(guide.guideId);
-        candidates.push(guide);
-      }
+      if (guides.length > 0) return [...guides].sort(comparePublishedGuides);
     }
-    return candidates;
+    return [];
   }
 
   /**
