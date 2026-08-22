@@ -2,8 +2,11 @@ import { queryOptions } from "@tanstack/react-query";
 import { publishedGuideDelivery } from "@/delivery";
 import type { PublishedGuideRefQuery } from "@/delivery/interfaces";
 import type { GuideQuery } from "@/domain/types";
+import { helpRetrieval } from "@/help-retrieval";
+import type { AuraHelpRequest } from "@/help-retrieval/interfaces";
 import { providers } from "@/providers";
 import { createCoverageService } from "@/services/coverage.service";
+
 
 /** Composition boundary: coverage joins external providers + Guide Studio. */
 const coverageService = createCoverageService(providers);
@@ -185,5 +188,27 @@ export const publishedDeliveryQueries = {
       queryFn: () => publishedGuideDelivery.getRelatedPublishedGuides(guideId!),
       enabled: Boolean(guideId),
       retry,
+    }),
+};
+
+/**
+ * Build 3C — Help Retrieval access. The Simulated Aura harness calls exactly
+ * this boundary; it never reaches Guide Studio, seed data or the mock stores.
+ */
+export const helpRetrievalQueries = {
+  contexts: () =>
+    queryOptions({
+      queryKey: ["help-retrieval", "contexts"],
+      queryFn: () => helpRetrieval.listHelpContexts(),
+      retry: composedRetry,
+    }),
+  retrieve: (request: AuraHelpRequest | null) =>
+    queryOptions({
+      queryKey: ["help-retrieval", "retrieve", request],
+      queryFn: () => helpRetrieval.retrieve(request!),
+      enabled: Boolean(request?.query.trim()),
+      // Retrieval fans out across the delivery contract, so it tolerates more
+      // transient retries before surfacing the safe "unavailable" state.
+      retry: composedRetry,
     }),
 };
