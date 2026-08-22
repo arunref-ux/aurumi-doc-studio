@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { GuideCardList } from "@/components/help/GuideCard";
 import { HelpNotice, HelpSkeleton } from "@/components/help/HelpStates";
 import { HelpSearchBox } from "@/components/help/HelpSearchBox";
+import type { PublishedBrowseContext } from "@/delivery/interfaces";
 import { publishedDeliveryQueries } from "@/lib/queries";
 
 interface BrowseSearch {
