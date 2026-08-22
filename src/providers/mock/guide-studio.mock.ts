@@ -9,7 +9,12 @@ import {
   guideProvidesAuthoringCoverage,
   guideProvidesPublishedCoverage,
 } from "@/domain/guide-lifecycle";
-import { assertContentMarkdownValid, EMPTY_CONTENT_MARKDOWN } from "@/domain/guide-content";
+import {
+  assertContentMarkdownValid,
+  assertContentReadyForReview,
+  EMPTY_CONTENT_MARKDOWN,
+} from "@/domain/guide-content";
+
 import {
   assertGuideMetadataValid,
   assertVersionEditable,
