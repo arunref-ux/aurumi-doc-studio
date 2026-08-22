@@ -1,4 +1,9 @@
-import { isValidSourceKind, refKey } from "@/domain/external-ref";
+import {
+  REFERENCE_KIND_LABELS,
+  isValidSourceKind,
+  refKey,
+  type ReferenceKind,
+} from "@/domain/external-ref";
 import {
   comparePublishedGuides,
   resolvePublishedGuide,
@@ -7,9 +12,51 @@ import {
 import type { ProviderRegistry } from "@/providers/interfaces";
 import type {
   PublishedAssociationTarget,
+  PublishedBrowseArea,
+  PublishedBrowseContext,
   PublishedGuideDeliveryProvider,
   PublishedGuideRefQuery,
+  PublishedGuideSearchHit,
 } from "./interfaces";
+
+/**
+ * Build 3B — consumer browse taxonomy. Parent kinds group child kinds, and each
+ * area carries the friendly wording consumers see. Internal source / kind /
+ * externalId vocabulary never crosses this boundary.
+ */
+const BROWSE_AREAS: Array<{
+  areaId: string;
+  source: string;
+  label: string;
+  description: string;
+  parentKind: ReferenceKind;
+  childKind: ReferenceKind;
+}> = [
+  {
+    areaId: "apps",
+    source: "devharmony",
+    label: "Apps & features",
+    description: "Step-by-step help for the apps and features you work in every day.",
+    parentKind: "app",
+    childKind: "feature",
+  },
+  {
+    areaId: "topics",
+    source: "ai-studio",
+    label: "Topics & tasks",
+    description: "Guides organised around what you are trying to get done.",
+    parentKind: "topic",
+    childKind: "intent",
+  },
+  {
+    areaId: "integrations",
+    source: "connector",
+    label: "Integrations",
+    description: "Connect Aurumi to the tools your business already uses.",
+    parentKind: "connector",
+    childKind: "capability",
+  },
+];
 
 /**
  * Build 3A — mock Published Guide Delivery implementation.
