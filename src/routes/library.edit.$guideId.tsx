@@ -74,7 +74,7 @@ function EditGuidePage() {
       <Blocked
         guideId={guideId}
         title="Only draft versions are editable"
-        description={`The current version is ${guide.data.currentVersion.status}. Lifecycle transitions arrive in a later build.`}
+        description={`The current version is ${guide.data.currentVersion.status}. In Review and Approved versions are read-only — a reviewer must Request Changes to return it to Draft.`}
       />
     );
   }
