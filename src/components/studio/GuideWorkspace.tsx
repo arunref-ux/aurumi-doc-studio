@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Loader2, Save, Trash2, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Eye, Loader2, Pencil, Save, Trash2, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthorization } from "@/auth/AuthorizationContext";
 import {
@@ -24,7 +24,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { guideCommands } from "@/commands/guide-commands";
 import { useGuideCommand } from "@/commands/useGuideCommand";
+import { MarkdownPreview } from "@/components/studio/content/MarkdownPreview";
+import { RichContentEditor } from "@/components/studio/content/RichContentEditor";
 import { REFERENCE_KIND_LABELS, refKey } from "@/domain/external-ref";
+import { EMPTY_CONTENT_MARKDOWN } from "@/domain/guide-content";
 import { useDirtyNavigationGuard } from "@/hooks/useDirtyNavigationGuard";
 import { INITIAL_VERSION_NUMBER } from "@/domain/guide-editing";
 import {
@@ -51,6 +54,8 @@ interface Draft {
   title: string;
   summary: string;
   guideType: GuideType;
+  /** Canonical Markdown of the current GuideVersion — part of the same edit. */
+  contentMarkdown: string;
   associations: AssociationDraft[];
 }
 
@@ -59,6 +64,7 @@ function draftFromGuide(guide: GuideWithVersion): Draft {
     title: guide.title,
     summary: guide.summary,
     guideType: guide.guideType,
+    contentMarkdown: guide.currentVersion.contentMarkdown ?? EMPTY_CONTENT_MARKDOWN,
     associations: guide.associations.map((association) => ({
       ref: association.ref,
       label: association.label,
@@ -73,6 +79,7 @@ const EMPTY_DRAFT: Draft = {
   title: "",
   summary: "",
   guideType: "how-to",
+  contentMarkdown: EMPTY_CONTENT_MARKDOWN,
   associations: [],
 };
 
@@ -166,6 +173,7 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
         guideId: guide.id,
         title: draft.title,
         summary: draft.summary,
+        contentMarkdown: draft.contentMarkdown,
         actor,
         associations: draft.associations,
       });
@@ -333,13 +341,23 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
         </TabsContent>
 
         <TabsContent value="content" className="mt-4">
-          <section className="panel p-8 text-center">
-            <p className="text-sm font-medium">Content authoring is not available yet</p>
-            <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
-              Rich content authoring will be added in the next build (Build 2A.2 — Rich Content
-              Authoring and Markdown Canonical Representation).
-            </p>
-          </section>
+          {guide ? (
+            <ContentTab
+              value={draft.contentMarkdown}
+              onChange={(markdown) => {
+                setSaveState("idle");
+                setDraft((current) => ({ ...current, contentMarkdown: markdown }));
+              }}
+            />
+          ) : (
+            <section className="panel p-8 text-center">
+              <p className="text-sm font-medium">Save the draft first</p>
+              <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
+                Content belongs to the guide's current GuideVersion. Save this new guide as a draft
+                (v{INITIAL_VERSION_NUMBER}) and the content editor opens on that version.
+              </p>
+            </section>
+          )}
         </TabsContent>
 
         <TabsContent value="associations" className="mt-4">
@@ -390,6 +408,57 @@ export function GuideWorkspace({ guide }: { guide?: GuideWithVersion }) {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+/**
+ * Content tab: rich-text authoring plus a safe authoring preview of the same
+ * canonical Markdown. Both operate on the shared editing session state, so
+ * content participates in the existing dirty-state and atomic Save Draft flow.
+ */
+function ContentTab({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (markdown: string) => void;
+}) {
+  const [view, setView] = useState<"edit" | "preview">("edit");
+
+  return (
+    <section className="panel overflow-hidden">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div>
+          <h2 className="text-sm font-semibold">Guide content</h2>
+          <p className="text-xs text-muted-foreground">
+            Stored as Markdown on the current GuideVersion. Saved with Save Draft — there is no
+            separate content save.
+          </p>
+        </div>
+        <div className="inline-flex rounded-md border border-border p-0.5">
+          <Button
+            size="sm"
+            variant={view === "edit" ? "secondary" : "ghost"}
+            onClick={() => setView("edit")}
+          >
+            <Pencil className="size-3.5" /> Edit
+          </Button>
+          <Button
+            size="sm"
+            variant={view === "preview" ? "secondary" : "ghost"}
+            onClick={() => setView("preview")}
+          >
+            <Eye className="size-3.5" /> Preview
+          </Button>
+        </div>
+      </div>
+
+      {view === "edit" ? (
+        <RichContentEditor value={value} onChange={onChange} />
+      ) : (
+        <MarkdownPreview markdown={value} />
+      )}
+    </section>
   );
 }
 

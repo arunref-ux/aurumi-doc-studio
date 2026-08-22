@@ -9,6 +9,7 @@ import {
   guideProvidesAuthoringCoverage,
   guideProvidesPublishedCoverage,
 } from "@/domain/guide-lifecycle";
+import { assertContentMarkdownValid, EMPTY_CONTENT_MARKDOWN } from "@/domain/guide-content";
 import {
   assertGuideMetadataValid,
   assertVersionEditable,
@@ -338,6 +339,7 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
           guideId,
           versionNumber: INITIAL_VERSION_NUMBER,
           status: INITIAL_VERSION_STATUS,
+          contentMarkdown: EMPTY_CONTENT_MARKDOWN,
           createdAt: now,
           createdBy: input.actor,
           updatedAt: now,
@@ -384,6 +386,8 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
         const version = currentVersion(guide);
         assertVersionEditable(guide.id, version);
         assertGuideMetadataValid(input);
+        // Content is validated with metadata and associations BEFORE any commit.
+        assertContentMarkdownValid(input.contentMarkdown);
 
         const now = new Date().toISOString();
         const title = input.title.trim();
@@ -427,9 +431,9 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
         guide.associations = stagedAssociations;
         guide.updatedAt = now;
 
-
-        // GuideVersion remains the lifecycle authority: status is untouched,
-        // only its edit provenance moves forward.
+        // GuideVersion remains the lifecycle AND content authority: status is
+        // untouched, content and edit provenance move forward together.
+        version.contentMarkdown = input.contentMarkdown;
         version.updatedAt = now;
         version.updatedBy = input.actor;
 

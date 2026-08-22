@@ -160,12 +160,17 @@ export interface GuideAssociation {
   parentExternalId?: string;
 }
 
-/** Guide Studio-owned version record. Lifecycle authority. */
+/** Guide Studio-owned version record. Lifecycle AND content authority. */
 export interface GuideVersion {
   id: string;
   guideId: string;
   versionNumber: string;
   status: GuideVersionStatus;
+  /**
+   * Canonical persisted article content for THIS version (Build 2A.2).
+   * Markdown is the only source of truth; editors convert at their boundary.
+   */
+  contentMarkdown: string;
   createdAt: string;
   createdBy: string;
   updatedAt: string;
