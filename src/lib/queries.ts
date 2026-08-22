@@ -200,13 +200,15 @@ export const helpRetrievalQueries = {
     queryOptions({
       queryKey: ["help-retrieval", "contexts"],
       queryFn: () => helpRetrieval.listHelpContexts(),
-      retry,
+      retry: composedRetry,
     }),
   retrieve: (request: AuraHelpRequest | null) =>
     queryOptions({
       queryKey: ["help-retrieval", "retrieve", request],
       queryFn: () => helpRetrieval.retrieve(request!),
       enabled: Boolean(request?.query.trim()),
-      retry,
+      // Retrieval fans out across the delivery contract, so it tolerates more
+      // transient retries before surfacing the safe "unavailable" state.
+      retry: composedRetry,
     }),
 };
