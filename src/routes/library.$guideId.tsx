@@ -6,6 +6,7 @@ import { ActionButton } from "@/components/studio/PermissionGate";
 import { GuideWorkflowPanel } from "@/components/studio/GuideWorkflowPanel";
 import { WorkflowHistory } from "@/components/studio/WorkflowHistory";
 import { SourceChip } from "@/components/studio/SourceChip";
+import { ContentIndicator } from "@/components/studio/ContentIndicator";
 import { MarkdownPreview } from "@/components/studio/content/MarkdownPreview";
 
 import { StatusBadge } from "@/components/studio/StatusBadge";
@@ -149,7 +150,11 @@ function GuideDetailPage() {
               Read-only rendering of working version v{data.currentVersion.versionNumber}.
             </p>
           </div>
-          <StatusBadge status={data.currentVersion.status} />
+          <div className="flex items-center gap-2">
+            <ContentIndicator contentMarkdown={data.currentVersion.contentMarkdown} />
+            <StatusBadge status={data.currentVersion.status} />
+          </div>
+
         </div>
         <MarkdownPreview
           markdown={data.currentVersion.contentMarkdown}

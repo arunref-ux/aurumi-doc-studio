@@ -9,7 +9,12 @@ import {
   guideProvidesAuthoringCoverage,
   guideProvidesPublishedCoverage,
 } from "@/domain/guide-lifecycle";
-import { assertContentMarkdownValid, EMPTY_CONTENT_MARKDOWN } from "@/domain/guide-content";
+import {
+  assertContentMarkdownValid,
+  assertContentReadyForReview,
+  EMPTY_CONTENT_MARKDOWN,
+} from "@/domain/guide-content";
+
 import {
   assertGuideMetadataValid,
   assertVersionEditable,
@@ -240,6 +245,12 @@ function transition(
 
   // Centralized lifecycle policy — the only place a target status is resolved.
   const toStatus = resolveGuideVersionTransition(version.status, action);
+
+  // Content readiness precondition: an empty version may never enter review.
+  if (action === "submit_for_review") {
+    assertContentReadyForReview(version.contentMarkdown, version.versionNumber);
+  }
+
 
   const now = new Date().toISOString();
   const note = input.note?.trim();

@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus, RefreshCw, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { ContentIndicator } from "@/components/studio/ContentIndicator";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
+
 import { ActionButton } from "@/components/studio/PermissionGate";
 import { PageHeader } from "@/components/studio/PageHeader";
 import { SourceChip } from "@/components/studio/SourceChip";
@@ -186,13 +188,15 @@ function LibraryPage() {
             <table className="w-full min-w-[980px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left">
-                  <Th className="w-[30%]">Guide</Th>
+                  <Th className="w-[28%]">Guide</Th>
                   <Th>Type</Th>
                   <Th>Status</Th>
+                  <Th>Content</Th>
                   <Th>Version</Th>
-                  <Th className="w-[22%]">Primary context</Th>
+                  <Th className="w-[20%]">Primary context</Th>
                   <Th>Owner</Th>
                   <Th>Updated</Th>
+
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -216,9 +220,15 @@ function LibraryPage() {
                     <td className="px-4 py-2.5">
                       <StatusBadge status={guide.currentVersion.status} />
                     </td>
+                    <td className="px-4 py-2.5">
+                      <ContentIndicator
+                        contentMarkdown={guide.currentVersion.contentMarkdown}
+                      />
+                    </td>
                     <td className="px-4 py-2.5 font-mono text-xs tabular-nums">
                       v{guide.currentVersion.versionNumber}
                     </td>
+
                     <td className="px-4 py-2.5">
                       <PrimaryContext guide={guide} />
                     </td>

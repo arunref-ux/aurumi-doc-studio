@@ -4,7 +4,10 @@ import { useState, type ReactNode } from "react";
 import { useAuthorization } from "@/auth/AuthorizationContext";
 import { guideCommands } from "@/commands/guide-commands";
 import { useGuideCommand } from "@/commands/useGuideCommand";
+import { ContentIndicator } from "@/components/studio/ContentIndicator";
 import { StatusBadge } from "@/components/studio/StatusBadge";
+import { versionHasContent } from "@/domain/guide-content";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -125,6 +128,9 @@ export function GuideWorkflowPanel({
   };
 
   const submitBlockedByDirty = dirty && actions.includes("submit_for_review");
+  // Domain rule: an empty version is not a reviewable artefact.
+  const hasContent = versionHasContent(version.contentMarkdown);
+  const submitBlockedByEmptyContent = !hasContent && actions.includes("submit_for_review");
 
   const body = (
     <div className="space-y-3">
@@ -132,6 +138,7 @@ export function GuideWorkflowPanel({
         <span className="label-caps">Working</span>
         <span className="font-mono text-xs">Version {version.versionNumber}</span>
         <StatusBadge status={version.status} />
+        <ContentIndicator contentMarkdown={version.contentMarkdown} />
         <span className="text-xs text-muted-foreground">·</span>
         <span className="label-caps">Live for users</span>
         {publishedVersion ? (
@@ -164,6 +171,14 @@ export function GuideWorkflowPanel({
         </p>
       ) : null}
 
+      {submitBlockedByEmptyContent ? (
+        <p className="flex items-start gap-2 rounded-md border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          <TriangleAlert className="mt-0.5 size-3.5 text-destructive" />
+          This version has no guide content yet. Add content on the Content tab before submitting
+          for review — empty guides cannot enter review.
+        </p>
+      ) : null}
+
       {actions.length === 0 ? (
         <p className="text-xs text-muted-foreground">
           No workflow actions are available to you for this version.
@@ -172,8 +187,9 @@ export function GuideWorkflowPanel({
         <div className="flex flex-wrap items-center gap-2">
           {actions.map((action) => {
             const isSubmit = action === "submit_for_review";
-            // Dirty drafts may not be submitted: Save Draft first (no auto-save).
-            const disabled = pending !== null || (isSubmit && dirty);
+            // Dirty drafts and empty versions may not be submitted for review.
+            const disabled = pending !== null || (isSubmit && (dirty || !hasContent));
+
             return (
               <Button
                 key={action}

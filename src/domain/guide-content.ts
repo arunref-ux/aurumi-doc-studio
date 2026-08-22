@@ -95,3 +95,30 @@ export function youTubeEmbedUrl(url: string): string | null {
     return null;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Content readiness (review precondition)                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Content readiness is a domain rule, not a UI nicety: a GuideVersion with no
+ * authored content is not a reviewable artefact. Centralized here so the UI
+ * indicator, the workflow panel and the provider all agree.
+ */
+export function versionHasContent(contentMarkdown: string): boolean {
+  return !contentIsEmpty(contentMarkdown);
+}
+
+export class EmptyGuideContentError extends Error {
+  constructor(versionNumber: string) {
+    super(
+      `Version ${versionNumber} has no content. Add guide content before submitting it for review.`,
+    );
+    this.name = "EmptyGuideContentError";
+  }
+}
+
+/** Provider-boundary guard for the submit-for-review transition. */
+export function assertContentReadyForReview(contentMarkdown: string, versionNumber: string): void {
+  if (!versionHasContent(contentMarkdown)) throw new EmptyGuideContentError(versionNumber);
+}
