@@ -3,40 +3,41 @@ import { GUIDE_PERMISSIONS, type AuthorizedUser } from "@/domain/permissions";
 /**
  * Seeded identities for the prototype. Effective permissions stand in for the
  * permission set that Aurumi RBAC will resolve for the user later.
+ *
+ * `permissionProfileLabel` is a descriptive simulation label only — these are
+ * NOT new global roles. The four Aurumi base roles are unchanged.
  */
 export const SEEDED_USERS: AuthorizedUser[] = [
   {
     id: "usr-anita-rao",
     name: "Anita Rao",
     baseRole: "Manager",
-    permissionProfileLabel: "Authoring + Review Access",
+    permissionProfileLabel: "Author (create · edit · submit for review)",
     effectivePermissions: [
       GUIDE_PERMISSIONS.create,
       GUIDE_PERMISSIONS.edit,
       GUIDE_PERMISSIONS.submitForReview,
-      GUIDE_PERMISSIONS.review,
-      GUIDE_PERMISSIONS.requestChanges,
     ],
   },
   {
     id: "usr-ravi-kumar",
     name: "Ravi Kumar",
     baseRole: "Admin",
-    permissionProfileLabel: "Review Access",
-    effectivePermissions: [
-      GUIDE_PERMISSIONS.create,
-      GUIDE_PERMISSIONS.edit,
-      GUIDE_PERMISSIONS.submitForReview,
-      GUIDE_PERMISSIONS.review,
-      GUIDE_PERMISSIONS.approve,
-      GUIDE_PERMISSIONS.requestChanges,
-    ],
+    permissionProfileLabel: "Reviewer (request changes)",
+    effectivePermissions: [GUIDE_PERMISSIONS.review],
+  },
+  {
+    id: "usr-deepa-iyer",
+    name: "Deepa Iyer",
+    baseRole: "Manager",
+    permissionProfileLabel: "Approver (approve)",
+    effectivePermissions: [GUIDE_PERMISSIONS.approve],
   },
   {
     id: "usr-priya-shah",
     name: "Priya Shah",
     baseRole: "Admin",
-    permissionProfileLabel: "Publishing Access",
+    permissionProfileLabel: "Publishing Access (not used in Build 2B)",
     effectivePermissions: [
       GUIDE_PERMISSIONS.publish,
       GUIDE_PERMISSIONS.unpublish,
@@ -47,18 +48,20 @@ export const SEEDED_USERS: AuthorizedUser[] = [
     id: "usr-meera-nair",
     name: "Meera Nair",
     baseRole: "Employee",
-    permissionProfileLabel: "Authoring Access",
+    permissionProfileLabel: "Author + Reviewer",
     effectivePermissions: [
       GUIDE_PERMISSIONS.create,
       GUIDE_PERMISSIONS.edit,
       GUIDE_PERMISSIONS.submitForReview,
+      GUIDE_PERMISSIONS.review,
+      GUIDE_PERMISSIONS.approve,
     ],
   },
   {
     id: "usr-arjun-bhat",
     name: "Arjun Bhat",
     baseRole: "SuperAdmin",
-    permissionProfileLabel: "Full Access",
+    permissionProfileLabel: "Guide Admin (full override)",
     effectivePermissions: [GUIDE_PERMISSIONS.admin],
   },
 ];
