@@ -344,15 +344,18 @@ function LinkDialog({ editor }: { editor: Editor }) {
 function ImageDialog({ editor }: { editor: Editor }) {
   const [open, setOpen] = useState(false);
   const [alt, setAlt] = useState("");
-  const field = useUrlField();
+  // Images are dereferenced by the browser: http(s) only, no mailto:/data:/etc.
+  const field = useUrlField("", isSafeImageUrl);
 
   const apply = () => {
-    if (!field.valid) {
+    const src = field.url.trim();
+    // Insertion boundary guard — an unsafe image can never enter the Markdown.
+    if (!isSafeImageUrl(src)) {
       field.setTouched(true);
       return;
     }
     // Markdown image syntax: ![alt](url). No binary data is ever embedded.
-    editor.chain().focus().setImage({ src: field.url.trim(), alt: alt.trim() }).run();
+    editor.chain().focus().setImage({ src, alt: alt.trim() }).run();
     setOpen(false);
     field.setUrl("");
     setAlt("");
