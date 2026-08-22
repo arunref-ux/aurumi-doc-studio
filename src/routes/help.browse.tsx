@@ -13,10 +13,14 @@ interface BrowseSearch {
 }
 
 export const Route = createFileRoute("/help/browse")({
-  validateSearch: (search: Record<string, unknown>): BrowseSearch => ({
-    ...(typeof search.area === "string" && search.area ? { area: search.area } : {}),
-    ...(typeof search.c === "string" && search.c ? { c: search.c } : {}),
-  }),
+  validateSearch: (search: Record<string, unknown>): BrowseSearch => {
+    const area = search["area"];
+    const context = search["c"];
+    return {
+      ...(typeof area === "string" && area ? { area } : {}),
+      ...(typeof context === "string" && context ? { c: context } : {}),
+    };
+  },
   head: () => ({
     meta: [
       { title: "Browse Aurumi Help — Apps, Tasks & Integrations" },

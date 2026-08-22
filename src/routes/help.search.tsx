@@ -8,8 +8,10 @@ import { HelpSearchBox } from "@/components/help/HelpSearchBox";
 import { publishedDeliveryQueries } from "@/lib/queries";
 
 export const Route = createFileRoute("/help/search")({
-  validateSearch: (search: Record<string, unknown>): { q?: string } =>
-    typeof search.q === "string" && search.q ? { q: search.q } : {},
+  validateSearch: (search: Record<string, unknown>): { q?: string } => {
+    const q = search["q"];
+    return typeof q === "string" && q ? { q } : {};
+  },
   head: () => ({
     meta: [
       { title: "Search Aurumi Help" },
