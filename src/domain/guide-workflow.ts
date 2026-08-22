@@ -75,9 +75,7 @@ export function resolveGuideVersionTransition(
 }
 
 /** Available workflow actions for a status, in display order. */
-export function availableWorkflowActions(
-  fromStatus: GuideVersionStatus,
-): GuideWorkflowAction[] {
+export function availableWorkflowActions(fromStatus: GuideVersionStatus): GuideWorkflowAction[] {
   return (Object.keys(GUIDE_WORKFLOW_ACTION_LABELS) as GuideWorkflowAction[]).filter(
     (action) => canTransitionGuideVersion(fromStatus, action) !== null,
   );

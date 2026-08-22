@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
-import {
-  GUIDE_STATUS_LABELS,
-  GUIDE_WORKFLOW_EVENT_LABELS,
-} from "@/domain/types";
+import { GUIDE_STATUS_LABELS, GUIDE_WORKFLOW_EVENT_LABELS } from "@/domain/types";
 import { formatDateTime } from "@/lib/format";
 import { guideQueries } from "@/lib/queries";
 

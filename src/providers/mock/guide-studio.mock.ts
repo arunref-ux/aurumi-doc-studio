@@ -63,7 +63,6 @@ const workflowEvents: GuideVersionWorkflowEvent[] = [];
 validateGuideAssociations(guides);
 validateGuideVersions(guides, versions);
 
-
 function versionsOf(guideId: string): GuideVersion[] {
   return versions.filter((version) => version.guideId === guideId);
 }
@@ -348,9 +347,7 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
         const guide = requireGuide(input.guideId);
         assertVersionEditable(guide.id, currentVersion(guide));
         const key = refKey(input.ref);
-        const next = guide.associations.filter(
-          (association) => refKey(association.ref) !== key,
-        );
+        const next = guide.associations.filter((association) => refKey(association.ref) !== key);
         if (next.length === guide.associations.length) {
           throw new Error(`Association ${key} is not present on guide ${guide.id}.`);
         }
@@ -486,9 +483,7 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
           updatedAt: now,
           associations: stagedAssociations,
         };
-        const candidateGuides = guides.map((item) =>
-          item.id === guide.id ? stagedGuide : item,
-        );
+        const candidateGuides = guides.map((item) => (item.id === guide.id ? stagedGuide : item));
         validateGuideAssociations(candidateGuides);
         validateGuideVersions(candidateGuides, versions);
 
