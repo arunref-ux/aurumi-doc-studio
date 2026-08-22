@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { contentIsEmpty, youTubeEmbedUrl } from "@/domain/guide-content";
+import { contentIsEmpty, isSafeImageUrl, youTubeEmbedUrl } from "@/domain/guide-content";
 
 /**
  * Authoring preview (Build 2A.2) — NOT the public Help Portal.
