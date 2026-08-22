@@ -48,7 +48,7 @@ export function MarkdownPreview({
   if (contentIsEmpty(markdown)) {
     return (
       <div className="px-5 py-10 text-center text-xs text-muted-foreground">
-        No content yet. Switch to Edit and start writing your guide.
+        {emptyState ?? "No content yet. Switch to Edit and start writing your guide."}
       </div>
     );
   }
