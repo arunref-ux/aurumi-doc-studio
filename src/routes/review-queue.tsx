@@ -146,7 +146,7 @@ function QueueRow({ guide }: { guide: GuideWithVersion }) {
         <StatusBadge status={guide.currentVersion.status} />
         <button
           type="button"
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => setOpen((value: boolean) => !value)}
           className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline"
           aria-expanded={open}
         >
