@@ -19,6 +19,7 @@ import {
 } from "@/domain/guide-editing";
 import {
   GUIDE_WORKFLOW_EVENT_LABELS,
+  requireCurrentGuideVersion,
   resolveGuideVersionTransition,
   type GuideVersionWorkflowEvent,
   type GuideWorkflowAction,
