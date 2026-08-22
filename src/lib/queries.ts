@@ -2,8 +2,11 @@ import { queryOptions } from "@tanstack/react-query";
 import { publishedGuideDelivery } from "@/delivery";
 import type { PublishedGuideRefQuery } from "@/delivery/interfaces";
 import type { GuideQuery } from "@/domain/types";
+import { helpRetrieval } from "@/help-retrieval";
+import type { AuraHelpRequest } from "@/help-retrieval/interfaces";
 import { providers } from "@/providers";
 import { createCoverageService } from "@/services/coverage.service";
+
 
 /** Composition boundary: coverage joins external providers + Guide Studio. */
 const coverageService = createCoverageService(providers);
