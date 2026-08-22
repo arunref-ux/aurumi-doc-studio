@@ -384,7 +384,10 @@ function ImageDialog({ editor }: { editor: Editor }) {
               onChange={(event) => field.setUrl(event.target.value)}
               placeholder="https://…/deal-form.png"
             />
-            <UrlError show={field.touched && !field.valid} />
+            <UrlError
+              show={field.touched && !field.valid}
+              message="Image URLs must start with http:// or https://."
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="image-alt">Alt text (optional)</Label>
