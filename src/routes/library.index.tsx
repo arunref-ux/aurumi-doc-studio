@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus, RefreshCw, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { ContentIndicator } from "@/components/studio/ContentIndicator";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
+
 import { ActionButton } from "@/components/studio/PermissionGate";
 import { PageHeader } from "@/components/studio/PageHeader";
 import { SourceChip } from "@/components/studio/SourceChip";
