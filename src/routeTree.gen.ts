@@ -12,12 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoverageRouteImport } from './routes/coverage'
 import { Route as DeliveryRouteImport } from './routes/delivery'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as ReviewQueueRouteImport } from './routes/review-queue'
 import { Route as SourcesRouteImport } from './routes/sources'
+import { Route as HelpIndexRouteImport } from './routes/help.index'
+import { Route as HelpBrowseRouteImport } from './routes/help.browse'
+import { Route as HelpSearchRouteImport } from './routes/help.search'
 import { Route as LibraryIndexRouteImport } from './routes/library.index'
 import { Route as LibraryGuideIdRouteImport } from './routes/library.$guideId'
 import { Route as LibraryNewRouteImport } from './routes/library.new'
+import { Route as HelpGuideGuideIdRouteImport } from './routes/help.guide.$guideId'
 import { Route as LibraryEditGuideIdRouteImport } from './routes/library.edit.$guideId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +40,11 @@ const DeliveryRoute = DeliveryRouteImport.update({
   path: '/delivery',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LibraryRoute = LibraryRouteImport.update({
   id: '/library',
   path: '/library',
@@ -49,6 +59,21 @@ const SourcesRoute = SourcesRouteImport.update({
   id: '/sources',
   path: '/sources',
   getParentRoute: () => rootRouteImport,
+} as any)
+const HelpIndexRoute = HelpIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => HelpRoute,
+} as any)
+const HelpBrowseRoute = HelpBrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
+  getParentRoute: () => HelpRoute,
+} as any)
+const HelpSearchRoute = HelpSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => HelpRoute,
 } as any)
 const LibraryIndexRoute = LibraryIndexRouteImport.update({
   id: '/',
@@ -65,6 +90,11 @@ const LibraryNewRoute = LibraryNewRouteImport.update({
   path: '/new',
   getParentRoute: () => LibraryRoute,
 } as any)
+const HelpGuideGuideIdRoute = HelpGuideGuideIdRouteImport.update({
+  id: '/guide/$guideId',
+  path: '/guide/$guideId',
+  getParentRoute: () => HelpRoute,
+} as any)
 const LibraryEditGuideIdRoute = LibraryEditGuideIdRouteImport.update({
   id: '/edit/$guideId',
   path: '/edit/$guideId',
@@ -75,12 +105,17 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/coverage': typeof CoverageRoute
   '/delivery': typeof DeliveryRoute
+  '/help': typeof HelpRouteWithChildren
   '/library': typeof LibraryRouteWithChildren
   '/review-queue': typeof ReviewQueueRoute
   '/sources': typeof SourcesRoute
+  '/help/browse': typeof HelpBrowseRoute
+  '/help/search': typeof HelpSearchRoute
   '/library/$guideId': typeof LibraryGuideIdRoute
   '/library/new': typeof LibraryNewRoute
+  '/help/': typeof HelpIndexRoute
   '/library/': typeof LibraryIndexRoute
+  '/help/guide/$guideId': typeof HelpGuideGuideIdRoute
   '/library/edit/$guideId': typeof LibraryEditGuideIdRoute
 }
 export interface FileRoutesByTo {
@@ -89,9 +124,13 @@ export interface FileRoutesByTo {
   '/delivery': typeof DeliveryRoute
   '/review-queue': typeof ReviewQueueRoute
   '/sources': typeof SourcesRoute
+  '/help/browse': typeof HelpBrowseRoute
+  '/help/search': typeof HelpSearchRoute
   '/library/$guideId': typeof LibraryGuideIdRoute
   '/library/new': typeof LibraryNewRoute
+  '/help': typeof HelpIndexRoute
   '/library': typeof LibraryIndexRoute
+  '/help/guide/$guideId': typeof HelpGuideGuideIdRoute
   '/library/edit/$guideId': typeof LibraryEditGuideIdRoute
 }
 export interface FileRoutesById {
@@ -99,12 +138,17 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/coverage': typeof CoverageRoute
   '/delivery': typeof DeliveryRoute
+  '/help': typeof HelpRouteWithChildren
   '/library': typeof LibraryRouteWithChildren
   '/review-queue': typeof ReviewQueueRoute
   '/sources': typeof SourcesRoute
+  '/help/browse': typeof HelpBrowseRoute
+  '/help/search': typeof HelpSearchRoute
   '/library/$guideId': typeof LibraryGuideIdRoute
   '/library/new': typeof LibraryNewRoute
+  '/help/': typeof HelpIndexRoute
   '/library/': typeof LibraryIndexRoute
+  '/help/guide/$guideId': typeof HelpGuideGuideIdRoute
   '/library/edit/$guideId': typeof LibraryEditGuideIdRoute
 }
 export interface FileRouteTypes {
@@ -113,12 +157,17 @@ export interface FileRouteTypes {
     | '/'
     | '/coverage'
     | '/delivery'
+    | '/help'
     | '/library'
     | '/review-queue'
     | '/sources'
+    | '/help/browse'
+    | '/help/search'
     | '/library/$guideId'
     | '/library/new'
+    | '/help/'
     | '/library/'
+    | '/help/guide/$guideId'
     | '/library/edit/$guideId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,21 +176,30 @@ export interface FileRouteTypes {
     | '/delivery'
     | '/review-queue'
     | '/sources'
+    | '/help/browse'
+    | '/help/search'
     | '/library/$guideId'
     | '/library/new'
+    | '/help'
     | '/library'
+    | '/help/guide/$guideId'
     | '/library/edit/$guideId'
   id:
     | '__root__'
     | '/'
     | '/coverage'
     | '/delivery'
+    | '/help'
     | '/library'
     | '/review-queue'
     | '/sources'
+    | '/help/browse'
+    | '/help/search'
     | '/library/$guideId'
     | '/library/new'
+    | '/help/'
     | '/library/'
+    | '/help/guide/$guideId'
     | '/library/edit/$guideId'
   fileRoutesById: FileRoutesById
 }
@@ -149,6 +207,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CoverageRoute: typeof CoverageRoute
   DeliveryRoute: typeof DeliveryRoute
+  HelpRoute: typeof HelpRouteWithChildren
   LibraryRoute: typeof LibraryRouteWithChildren
   ReviewQueueRoute: typeof ReviewQueueRoute
   SourcesRoute: typeof SourcesRoute
@@ -177,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeliveryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/library': {
       id: '/library'
       path: '/library'
@@ -197,6 +263,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/sources'
       preLoaderRoute: typeof SourcesRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/help/': {
+      id: '/help/'
+      path: '/'
+      fullPath: '/help/'
+      preLoaderRoute: typeof HelpIndexRouteImport
+      parentRoute: typeof HelpRoute
+    }
+    '/help/browse': {
+      id: '/help/browse'
+      path: '/browse'
+      fullPath: '/help/browse'
+      preLoaderRoute: typeof HelpBrowseRouteImport
+      parentRoute: typeof HelpRoute
+    }
+    '/help/search': {
+      id: '/help/search'
+      path: '/search'
+      fullPath: '/help/search'
+      preLoaderRoute: typeof HelpSearchRouteImport
+      parentRoute: typeof HelpRoute
     }
     '/library/': {
       id: '/library/'
@@ -219,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryNewRouteImport
       parentRoute: typeof LibraryRoute
     }
+    '/help/guide/$guideId': {
+      id: '/help/guide/$guideId'
+      path: '/guide/$guideId'
+      fullPath: '/help/guide/$guideId'
+      preLoaderRoute: typeof HelpGuideGuideIdRouteImport
+      parentRoute: typeof HelpRoute
+    }
     '/library/edit/$guideId': {
       id: '/library/edit/$guideId'
       path: '/edit/$guideId'
@@ -228,6 +322,22 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface HelpRouteChildren {
+  HelpBrowseRoute: typeof HelpBrowseRoute
+  HelpSearchRoute: typeof HelpSearchRoute
+  HelpIndexRoute: typeof HelpIndexRoute
+  HelpGuideGuideIdRoute: typeof HelpGuideGuideIdRoute
+}
+
+const HelpRouteChildren: HelpRouteChildren = {
+  HelpBrowseRoute: HelpBrowseRoute,
+  HelpSearchRoute: HelpSearchRoute,
+  HelpIndexRoute: HelpIndexRoute,
+  HelpGuideGuideIdRoute: HelpGuideGuideIdRoute,
+}
+
+const HelpRouteWithChildren = HelpRoute._addFileChildren(HelpRouteChildren)
 
 interface LibraryRouteChildren {
   LibraryGuideIdRoute: typeof LibraryGuideIdRoute
@@ -250,6 +360,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CoverageRoute: CoverageRoute,
   DeliveryRoute: DeliveryRoute,
+  HelpRoute: HelpRouteWithChildren,
   LibraryRoute: LibraryRouteWithChildren,
   ReviewQueueRoute: ReviewQueueRoute,
   SourcesRoute: SourcesRoute,

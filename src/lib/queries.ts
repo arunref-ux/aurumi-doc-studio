@@ -152,4 +152,38 @@ export const publishedDeliveryQueries = {
       enabled: Boolean(query),
       retry,
     }),
+  byRefKey: (key: string | null) =>
+    queryOptions({
+      queryKey: ["published-delivery", "by-ref-key", key],
+      queryFn: () => publishedGuideDelivery.getPublishedGuidesByRefKey(key!),
+      enabled: Boolean(key),
+      retry,
+    }),
+  browseAreas: () =>
+    queryOptions({
+      queryKey: ["published-delivery", "browse-areas"],
+      queryFn: () => publishedGuideDelivery.listPublishedBrowseAreas(),
+      retry,
+    }),
+  browseContext: (key: string | null) =>
+    queryOptions({
+      queryKey: ["published-delivery", "browse-context", key],
+      queryFn: () => publishedGuideDelivery.getPublishedBrowseContext(key!),
+      enabled: Boolean(key),
+      retry,
+    }),
+  search: (query: string) =>
+    queryOptions({
+      queryKey: ["published-delivery", "search", query.trim().toLowerCase()],
+      queryFn: () => publishedGuideDelivery.searchPublishedGuides(query),
+      enabled: query.trim().length > 0,
+      retry,
+    }),
+  related: (guideId: string | null) =>
+    queryOptions({
+      queryKey: ["published-delivery", "related", guideId],
+      queryFn: () => publishedGuideDelivery.getRelatedPublishedGuides(guideId!),
+      enabled: Boolean(guideId),
+      retry,
+    }),
 };

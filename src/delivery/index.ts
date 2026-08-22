@@ -9,6 +9,9 @@ export const publishedGuideDelivery = createPublishedGuideDeliveryService(provid
 
 export type {
   PublishedAssociationTarget,
+  PublishedBrowseArea,
+  PublishedBrowseContext,
   PublishedGuideDeliveryProvider,
   PublishedGuideRefQuery,
+  PublishedGuideSearchHit,
 } from "./interfaces";

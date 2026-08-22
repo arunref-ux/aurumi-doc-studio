@@ -32,6 +32,40 @@ export interface PublishedAssociationTarget {
   publishedGuideCount: number;
 }
 
+/**
+ * Build 3B — consumer-oriented browse projection.
+ *
+ * A browse context is a published association target expressed in consumer
+ * terms: a friendly label, a friendly kind label and (optionally) child
+ * contexts. `refKey` stays an opaque handle: consumers pass it back to the
+ * contract and never parse or display it.
+ */
+export interface PublishedBrowseContext {
+  refKey: string;
+  label: string;
+  kindLabel: string;
+  /** Published guides associated with this exact context. */
+  publishedGuideCount: number;
+  /** Published guides in this context and everything beneath it. */
+  totalPublishedGuideCount: number;
+  children: PublishedBrowseContext[];
+}
+
+/** A top-level browse area, one per source family (friendly labels only). */
+export interface PublishedBrowseArea {
+  areaId: string;
+  label: string;
+  description: string;
+  totalPublishedGuideCount: number;
+  contexts: PublishedBrowseContext[];
+}
+
+/** Deterministic, non-AI search hit. No ranking score is implied. */
+export interface PublishedGuideSearchHit {
+  guide: PublishedGuide;
+  matchedIn: Array<"title" | "summary" | "content">;
+}
+
 export interface PublishedGuideDeliveryProvider {
   /** Only guides with a valid current published version. */
   listPublishedGuides(): Promise<PublishedGuide[]>;
@@ -43,4 +77,12 @@ export interface PublishedGuideDeliveryProvider {
   getPublishedGuidesByRefKey(key: string): Promise<PublishedGuide[]>;
   /** Source references that currently have published Help available. */
   listPublishedAssociationTargets(): Promise<PublishedAssociationTarget[]>;
+  /** Consumer browse tree derived from published associations only. */
+  listPublishedBrowseAreas(): Promise<PublishedBrowseArea[]>;
+  /** One browse context (with children), or null when it has no published Help. */
+  getPublishedBrowseContext(refKey: string): Promise<PublishedBrowseContext | null>;
+  /** Deterministic case-insensitive search over published content only. */
+  searchPublishedGuides(query: string): Promise<PublishedGuideSearchHit[]>;
+  /** Published guides sharing at least one published association target. */
+  getRelatedPublishedGuides(guideId: string): Promise<PublishedGuide[]>;
 }

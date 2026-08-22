@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -131,15 +132,24 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Build 3B: the Help Portal owns its own calm, reading-first chrome, so the
+  // internal Doc Studio shell is not rendered for /help routes.
+  const isHelpMode = useRouterState({
+    select: (state) => state.location.pathname.startsWith("/help"),
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
       <GuideStudioAuthorizationProvider>
         <TooltipProvider delayDuration={200}>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <StudioShell>
+          {isHelpMode ? (
             <Outlet />
-          </StudioShell>
+          ) : (
+            <StudioShell>
+              <Outlet />
+            </StudioShell>
+          )}
         </TooltipProvider>
       </GuideStudioAuthorizationProvider>
     </QueryClientProvider>

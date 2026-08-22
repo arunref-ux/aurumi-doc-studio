@@ -8,7 +8,14 @@ import { contentIsEmpty, isSafeImageUrl, youTubeEmbedUrl } from "@/domain/guide-
  * in guide content is never trusted or executed, and sanitization runs in the
  * browser only (both libraries are imported lazily after hydration).
  */
-export function MarkdownPreview({ markdown }: { markdown: string }) {
+export function MarkdownPreview({
+  markdown,
+  emptyState,
+}: {
+  markdown: string;
+  /** Consumer surfaces (e.g. the Help Portal) override the authoring wording. */
+  emptyState?: string;
+}) {
   const [html, setHtml] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,7 +48,7 @@ export function MarkdownPreview({ markdown }: { markdown: string }) {
   if (contentIsEmpty(markdown)) {
     return (
       <div className="px-5 py-10 text-center text-xs text-muted-foreground">
-        No content yet. Switch to Edit and start writing your guide.
+        {emptyState ?? "No content yet. Switch to Edit and start writing your guide."}
       </div>
     );
   }
