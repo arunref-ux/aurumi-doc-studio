@@ -18,6 +18,12 @@ import {
   slugifyTitle,
 } from "@/domain/guide-editing";
 import {
+  GUIDE_WORKFLOW_EVENT_LABELS,
+  resolveGuideVersionTransition,
+  type GuideVersionWorkflowEvent,
+  type GuideWorkflowAction,
+} from "@/domain/guide-workflow";
+import {
   GUIDE_STATUS_ORDER,
   GUIDE_TYPE_LABELS,
   type CoverageFact,
@@ -33,6 +39,7 @@ import type {
   CreateAssociationInput,
   CreateGuideInput,
   GuideStudioProvider,
+  GuideWorkflowTransitionInput,
   RemoveAssociationInput,
   UpdateGuideDraftInput,
 } from "@/providers/interfaces";
@@ -45,6 +52,8 @@ import { clone, simulateRequest } from "./latency";
 const guides: Guide[] = seedGuides.map((guide) => ({ ...guide }));
 const versions: GuideVersion[] = seedGuideVersions.map((version) => ({ ...version }));
 const activity: GuideActivityEntry[] = seedActivity.map((entry) => ({ ...entry }));
+/** Build 2B: minimal version-level workflow audit trail. */
+const workflowEvents: GuideVersionWorkflowEvent[] = [];
 
 /**
  * Store initialization integrity gate. Seed, imported and future hydrated data
@@ -188,6 +197,65 @@ function requireGuide(guideId: string): Guide {
   const guide = guides.find((item) => item.id === guideId);
   if (!guide) throw new Error(`Unknown guide: ${guideId}`);
   return guide;
+}
+
+/**
+ * Single atomic workflow transition primitive (Build 2B).
+ *
+ * Staged validation -> single commit. Authorization already happened at the
+ * command boundary; this boundary independently enforces the lifecycle policy,
+ * so bypassing the UI cannot produce an illegal status. The status change and
+ * its workflow event are written together — neither can exist without the other.
+ */
+function transition(
+  action: GuideWorkflowAction,
+  input: GuideWorkflowTransitionInput,
+): GuideWithVersion {
+  const guide = requireGuide(input.guideId);
+  const version = currentVersion(guide);
+
+  // Stale-UI guard: the caller must act on the guide's current version.
+  if (input.guideVersionId && input.guideVersionId !== version.id) {
+    throw new Error(
+      `Version ${input.guideVersionId} is no longer the current version of guide ${guide.id}.`,
+    );
+  }
+
+  // Centralized lifecycle policy — the only place a target status is resolved.
+  const toStatus = resolveGuideVersionTransition(version.status, action);
+
+  const now = new Date().toISOString();
+  const note = input.note?.trim();
+  const stagedEvent: GuideVersionWorkflowEvent = {
+    id: nextId(`${guide.id}-wf`),
+    guideId: guide.id,
+    guideVersionId: version.id,
+    action,
+    fromStatus: version.status,
+    toStatus,
+    performedAt: now,
+    performedBy: input.actor,
+    ...(note ? { note } : {}),
+  };
+
+  // ---- commit (status + event together) ----
+  version.status = toStatus;
+  version.updatedAt = now;
+  version.updatedBy = input.actor;
+  guide.updatedAt = now;
+  workflowEvents.push(stagedEvent);
+  activity.push({
+    id: nextId(`${guide.id}-activity`),
+    guideId: guide.id,
+    actor: input.actor,
+    action: GUIDE_WORKFLOW_EVENT_LABELS[action],
+    detail: note
+      ? `Version ${version.versionNumber} · ${note}`
+      : `Version ${version.versionNumber}`,
+    at: now,
+  });
+
+  return withVersion(guide);
 }
 
 export const mockGuideStudioProvider: GuideStudioProvider = {
@@ -450,5 +518,30 @@ export const mockGuideStudioProvider: GuideStudioProvider = {
       },
       { label: "Guide Studio Guide API" },
     ),
-};
 
+  getWorkflowEvents: (guideId) =>
+    simulateRequest(
+      () =>
+        clone(
+          workflowEvents
+            .filter((event) => event.guideId === guideId)
+            .sort((a, b) => b.performedAt.localeCompare(a.performedAt)),
+        ),
+      { label: "Guide Workflow History API", minLatency: 120, maxLatency: 320 },
+    ),
+
+  submitGuideVersionForReview: (input) =>
+    simulateRequest(() => clone(transition("submit_for_review", input)), {
+      label: "Guide Workflow API",
+    }),
+
+  requestGuideVersionChanges: (input) =>
+    simulateRequest(() => clone(transition("request_changes", input)), {
+      label: "Guide Workflow API",
+    }),
+
+  approveGuideVersion: (input) =>
+    simulateRequest(() => clone(transition("approve", input)), {
+      label: "Guide Workflow API",
+    }),
+};
