@@ -212,6 +212,33 @@ export function createHelpRetrievalService(
     return candidates;
   }
 
+  /**
+   * Deterministic phrase + token search over published content only. Every hit
+   * comes from the Published Guide Delivery search capability, so published-only
+   * enforcement is never re-implemented here.
+   */
+  async function searchDeterministically(query: string): Promise<PublishedGuide[]> {
+    const scores = new Map<string, { guide: PublishedGuide; score: number }>();
+
+    const record = (guide: PublishedGuide, weight: number) => {
+      const existing = scores.get(guide.guideId);
+      if (existing) existing.score += weight;
+      else scores.set(guide.guideId, { guide, score: weight });
+    };
+
+    const phraseHits = await delivery.searchPublishedGuides(query);
+    for (const hit of phraseHits) record(hit.guide, 10 + fieldWeight(hit.matchedIn));
+
+    for (const token of signalTokens(query)) {
+      const hits = await delivery.searchPublishedGuides(token);
+      for (const hit of hits) record(hit.guide, fieldWeight(hit.matchedIn));
+    }
+
+    return [...scores.values()]
+      .sort((a, b) => b.score - a.score || comparePublishedGuides(a.guide, b.guide))
+      .map((entry) => entry.guide);
+  }
+
   /** refKey -> friendly label, sourced only from published associations. */
   async function contextLabelIndex(): Promise<Map<string, string>> {
     const targets = await delivery.listPublishedAssociationTargets();
@@ -320,4 +347,13 @@ export function toPlainTextExcerpt(markdown: string, maxLength = 260): string {
   const cut = text.slice(0, maxLength);
   const lastSpace = cut.lastIndexOf(" ");
   return `${(lastSpace > 80 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+}
+
+/** Fixed field weighting: title beats summary beats body. */
+function fieldWeight(matchedIn: Array<"title" | "summary" | "content">): number {
+  let weight = 0;
+  if (matchedIn.includes("title")) weight += 3;
+  if (matchedIn.includes("summary")) weight += 2;
+  if (matchedIn.includes("content")) weight += 1;
+  return weight;
 }
