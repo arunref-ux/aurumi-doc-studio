@@ -88,6 +88,26 @@ export function MarkdownPreview({ markdown }: { markdown: string }) {
   );
 }
 
+/**
+ * Second safety gate for images: even if persisted Markdown already contains an
+ * image with a non-http(s) source, it is never rendered as an active image. The
+ * <img> is replaced by inert text so nothing is executed or dereferenced.
+ */
+function neutralizeUnsafeImages(html: string): string {
+  if (typeof document === "undefined") return html;
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  for (const img of Array.from(template.content.querySelectorAll("img"))) {
+    const src = img.getAttribute("src") ?? "";
+    if (isSafeImageUrl(src)) continue;
+    const note = document.createElement("span");
+    note.className = "text-xs text-muted-foreground";
+    note.textContent = `[Blocked image reference: unsupported URL scheme]`;
+    img.replaceWith(note);
+  }
+  return template.innerHTML;
+}
+
 interface VideoReference {
   url: string;
   label: string;
