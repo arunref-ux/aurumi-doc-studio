@@ -107,7 +107,10 @@ function GuideReadingPage() {
 
       <div className="help-prose mt-8">
         {/* Reuses the shared safe Markdown pipeline: sanitized HTML, http(s)-only images, safe embeds. */}
-        <MarkdownPreview markdown={published.contentMarkdown} />
+        <MarkdownPreview
+          markdown={published.contentMarkdown}
+          emptyState="This guide does not have any published content yet."
+        />
       </div>
 
       {relatedGuides.length > 0 ? (
