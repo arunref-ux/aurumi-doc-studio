@@ -54,6 +54,12 @@ const extensions = [
   Markdown.configure({ html: false, linkify: true, breaks: false, transformPastedText: true }),
 ];
 
+/** Single conversion boundary: ProseMirror state -> canonical Markdown. */
+function toMarkdown(editor: Editor): string {
+  const storage = editor.storage["markdown"] as { getMarkdown: () => string };
+  return storage.getMarkdown();
+}
+
 export function RichContentEditor({
   value,
   onChange,
@@ -74,7 +80,7 @@ export function RichContentEditor({
       },
     },
     onUpdate: ({ editor: instance }) => {
-      onChange(instance.storage.markdown.getMarkdown() as string);
+      onChange(toMarkdown(instance));
     },
   });
 
@@ -82,9 +88,9 @@ export function RichContentEditor({
   // reset. Never overwrite the document while the author is typing.
   useEffect(() => {
     if (!editor) return;
-    const current = editor.storage.markdown.getMarkdown() as string;
+    const current = toMarkdown(editor);
     if (current !== value && !editor.isFocused) {
-      editor.commands.setContent(value, { emitUpdate: false });
+      editor.commands.setContent(value, false);
     }
   }, [editor, value]);
 
@@ -276,7 +282,7 @@ function LinkDialog({ editor }: { editor: Editor }) {
   const field = useUrlField();
 
   useEffect(() => {
-    if (open) field.setUrl((editor.getAttributes("link").href as string) ?? "");
+    if (open) field.setUrl((editor.getAttributes("link")["href"] as string) ?? "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
