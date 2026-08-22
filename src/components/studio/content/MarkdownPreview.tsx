@@ -26,7 +26,7 @@ export function MarkdownPreview({ markdown }: { markdown: string }) {
           FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form"],
           FORBID_ATTR: ["style", "srcdoc", "onerror", "onload"],
         });
-        if (!cancelled) setHtml(safe);
+        if (!cancelled) setHtml(neutralizeUnsafeImages(safe));
       } catch {
         if (!cancelled) setHtml(null);
       }
