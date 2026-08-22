@@ -281,7 +281,33 @@ function transition(
         }
       : null;
 
+  /**
+   * Full-store integrity gate on the STAGED result, before anything is
+   * committed. Guarantees the resulting state keeps at most one Published
+   * version per guide, a consistent publishedVersionId pointer and
+   * guide-scoped versionNumber uniqueness. A failure throws here, so no
+   * status change, pointer update or workflow event is ever written.
+   */
+  const candidateVersions = versions.map((item) => {
+    if (item.id === version.id) return { ...item, status: toStatus };
+    if (supersedeTarget && supersededStatus && item.id === supersedeTarget.id) {
+      return { ...item, status: supersededStatus };
+    }
+    return item;
+  });
+  const candidateGuides = guides.map((item) =>
+    item.id === guide.id
+      ? {
+          ...item,
+          publishedVersionId: action === "publish" ? version.id : item.publishedVersionId,
+        }
+      : item,
+  );
+  validateGuideAssociations(candidateGuides);
+  validateGuideVersions(candidateGuides, candidateVersions);
+
   // ---- commit (status + event together) ----
+
   version.status = toStatus;
   version.updatedAt = now;
   version.updatedBy = input.actor;
