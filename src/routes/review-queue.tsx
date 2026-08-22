@@ -1,8 +1,12 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { useState } from "react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
+import { MarkdownPreview } from "@/components/studio/content/MarkdownPreview";
+import { contentIsEmpty } from "@/domain/guide-content";
 import { PageHeader } from "@/components/studio/PageHeader";
+
 import { StatusBadge } from "@/components/studio/StatusBadge";
 import {
   GUIDE_STATUS_LABELS,
