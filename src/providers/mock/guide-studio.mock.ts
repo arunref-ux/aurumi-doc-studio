@@ -19,6 +19,7 @@ import {
 } from "@/domain/guide-editing";
 import {
   GUIDE_WORKFLOW_EVENT_LABELS,
+  requireCurrentGuideVersion,
   resolveGuideVersionTransition,
   type GuideVersionWorkflowEvent,
   type GuideWorkflowAction,
@@ -213,12 +214,8 @@ function transition(
   const guide = requireGuide(input.guideId);
   const version = currentVersion(guide);
 
-  // Stale-UI guard: the caller must act on the guide's current version.
-  if (input.guideVersionId && input.guideVersionId !== version.id) {
-    throw new Error(
-      `Version ${input.guideVersionId} is no longer the current version of guide ${guide.id}.`,
-    );
-  }
+  // Strict version identity: explicit, non-blank, exactly the current version.
+  requireCurrentGuideVersion(input.guideVersionId, version.id);
 
   // Centralized lifecycle policy — the only place a target status is resolved.
   const toStatus = resolveGuideVersionTransition(version.status, action);
