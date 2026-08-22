@@ -142,6 +142,7 @@ const seeds: GuideSeed[] = [
     currentVersion: "1.1",
     owner: "Priya Raghavan",
     createdAt: "2025-03-12T09:15:00Z",
+    contentMarkdown: CREATE_DEAL_CONTENT,
     updatedAt: "2026-08-11T11:20:00Z",
     publishedAt: "2026-08-11T12:00:00Z",
     associations: [
@@ -262,6 +263,7 @@ const seeds: GuideSeed[] = [
     createdAt: "2026-05-14T08:10:00Z",
     updatedAt: "2026-05-29T14:05:00Z",
     publishedAt: null,
+    contentMarkdown: EMPLOYEE_ROLES_DRAFT_CONTENT,
     // v1.0 shipped previously; the current v0.2 draft is the next revision.
     history: [
       {
