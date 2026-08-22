@@ -61,12 +61,17 @@ export function StudioShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="border-t border-sidebar-border px-5 py-4 text-[0.6875rem] leading-relaxed text-sidebar-muted">
-          <p className="font-medium text-sidebar-foreground">Build 3A · Prototype</p>
+          <p className="font-medium text-sidebar-foreground">Build 3B · Prototype</p>
           <p>
             Authoring, review, publishing and the read-only Published Guide Delivery boundary are
-            live. Standard Help Portal arrives in Build 3B.
+            live. The Aurumi Help Portal now consumes that boundary.
           </p>
-
+          <a
+            href="/help"
+            className="mt-2 inline-flex items-center gap-1 text-sidebar-foreground underline underline-offset-4"
+          >
+            Open Aurumi Help ↗
+          </a>
         </div>
       </aside>
 
