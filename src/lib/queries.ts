@@ -190,3 +190,23 @@ export const publishedDeliveryQueries = {
       retry,
     }),
 };
+
+/**
+ * Build 3C — Help Retrieval access. The Simulated Aura harness calls exactly
+ * this boundary; it never reaches Guide Studio, seed data or the mock stores.
+ */
+export const helpRetrievalQueries = {
+  contexts: () =>
+    queryOptions({
+      queryKey: ["help-retrieval", "contexts"],
+      queryFn: () => helpRetrieval.listHelpContexts(),
+      retry,
+    }),
+  retrieve: (request: AuraHelpRequest | null) =>
+    queryOptions({
+      queryKey: ["help-retrieval", "retrieve", request],
+      queryFn: () => helpRetrieval.retrieve(request!),
+      enabled: Boolean(request?.query.trim()),
+      retry,
+    }),
+};
