@@ -268,16 +268,21 @@ function Toolbar({ editor }: { editor: Editor }) {
 /* URL-based insertion dialogs (no upload/storage infrastructure)      */
 /* ------------------------------------------------------------------ */
 
-function useUrlField(initial = "") {
+function useUrlField(
+  initial = "",
+  validate: (value: string) => boolean = isValidContentUrl,
+) {
   const [url, setUrl] = useState(initial);
   const [touched, setTouched] = useState(false);
-  const valid = isValidContentUrl(url);
+  const valid = validate(url);
   return { url, setUrl, touched, setTouched, valid };
 }
 
-function UrlError({ show }: { show: boolean }) {
+function UrlError({ show, message }: { show: boolean; message?: string }) {
   return show ? (
-    <p className="text-xs text-destructive">Enter a valid http(s) URL.</p>
+    <p className="text-xs text-destructive">
+      {message ?? "Enter a valid http(s) URL."}
+    </p>
   ) : null;
 }
 
