@@ -33,6 +33,8 @@ export interface UpdateGuideDraftCommandInput {
   guideId: string;
   title: string;
   summary: string;
+  /** Canonical Markdown for the current GuideVersion (Build 2A.2). */
+  contentMarkdown: string;
   actor: string;
   associations: AssociationDraftInput[];
 }

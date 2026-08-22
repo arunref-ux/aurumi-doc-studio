@@ -70,7 +70,7 @@ export interface CreateGuideInput {
 }
 
 /**
- * Build 2A.1 editable contract: title, summary and associations ONLY.
+ * Editable contract: title, summary, version contentMarkdown and associations.
  * `guideType` is intentionally absent — it is assigned at creation and is not
  * part of the draft update surface in this build.
  *
@@ -81,6 +81,11 @@ export interface UpdateGuideDraftInput {
   guideId: string;
   title: string;
   summary: string;
+  /**
+   * Canonical Markdown content committed onto the CURRENT GuideVersion as part
+   * of the same atomic edit (Build 2A.2). There is no separate content save.
+   */
+  contentMarkdown: string;
   actor: string;
   associations: AssociationDraft[];
 }
