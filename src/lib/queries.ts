@@ -85,6 +85,12 @@ export const guideQueries = {
       queryFn: () => providers.guideStudio.getRecentActivity(limit),
       retry,
     }),
+  workflowEvents: (guideId: string) =>
+    queryOptions({
+      queryKey: ["guides", "workflow-events", guideId],
+      queryFn: () => providers.guideStudio.getWorkflowEvents(guideId),
+      retry,
+    }),
   versions: (guideId: string) =>
     queryOptions({
       queryKey: ["guides", "versions", guideId],

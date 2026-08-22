@@ -39,6 +39,17 @@ export interface UpdateGuideDraftCommandInput {
   associations: AssociationDraftInput[];
 }
 
+/**
+ * Build 2B workflow command input. Callers never pass a status — the target
+ * status is resolved by the centralized lifecycle policy in the provider.
+ */
+export interface GuideWorkflowCommandInput {
+  guideId: string;
+  guideVersionId: string;
+  actor: string;
+  note?: string;
+}
+
 export interface AddGuideAssociationInput {
   guideId: string;
   ref: GuideReferenceTarget;
@@ -84,16 +95,39 @@ export const removeGuideAssociationCommand = defineCommand<RemoveGuideAssociatio
   (input) => providers.guideStudio.removeAssociation(input),
 );
 
+/* ------------------------------------------------------------------ */
+/* Build 2B — review & approval workflow commands                      */
+/* ------------------------------------------------------------------ */
+
+export const submitGuideForReviewCommand = defineCommand<
+  GuideWorkflowCommandInput,
+  GuideWithVersion
+>("guide.action.submit_for_review", (input) =>
+  providers.guideStudio.submitGuideVersionForReview(input),
+);
+
+export const requestGuideChangesCommand = defineCommand<
+  GuideWorkflowCommandInput,
+  GuideWithVersion
+>("guide.action.request_changes", (input) =>
+  providers.guideStudio.requestGuideVersionChanges(input),
+);
+
+export const approveGuideVersionCommand = defineCommand<
+  GuideWorkflowCommandInput,
+  GuideWithVersion
+>("guide.action.approve", (input) => providers.guideStudio.approveGuideVersion(input));
+
 /** Later-build lifecycle mutations — authorization policy already centralized. */
 export const guideCommands = {
   createGuide: createGuideCommand,
   updateGuideDraft: updateGuideDraftCommand,
   addAssociation: addGuideAssociationCommand,
   removeAssociation: removeGuideAssociationCommand,
-  submitForReview: definePlannedCommand<{ guideId: string }>("guide.action.submit_for_review"),
+  submitForReview: submitGuideForReviewCommand,
   review: definePlannedCommand<{ guideId: string }>("guide.action.review"),
-  approve: definePlannedCommand<{ guideId: string }>("guide.action.approve"),
-  requestChanges: definePlannedCommand<{ guideId: string }>("guide.action.request_changes"),
+  approve: approveGuideVersionCommand,
+  requestChanges: requestGuideChangesCommand,
   publish: definePlannedCommand<{ guideId: string }>("guide.action.publish"),
   unpublish: definePlannedCommand<{ guideId: string }>("guide.action.unpublish"),
   archive: definePlannedCommand<{ guideId: string }>("guide.action.archive"),

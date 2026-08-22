@@ -3,6 +3,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
 import { ActionButton } from "@/components/studio/PermissionGate";
+import { GuideWorkflowPanel } from "@/components/studio/GuideWorkflowPanel";
+import { WorkflowHistory } from "@/components/studio/WorkflowHistory";
 import { SourceChip } from "@/components/studio/SourceChip";
 import { StatusBadge } from "@/components/studio/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -101,12 +103,6 @@ function GuideDetailPage() {
                   }
                 : {})}
             />
-            <ActionButton action="guide.action.submit_for_review" />
-            <ActionButton action="guide.action.approve" />
-            <ActionButton action="guide.action.request_changes" />
-            <ActionButton action="guide.action.publish" />
-            <ActionButton action="guide.action.unpublish" />
-            <ActionButton action="guide.action.archive" />
           </div>
         </div>
 
@@ -117,14 +113,19 @@ function GuideDetailPage() {
           <Meta label="Created" value={formatDate(data.createdAt)} />
           <Meta label="Published" value={formatDate(data.currentVersion.publishedAt)} />
         </dl>
+
+        {/* Build 2B: review & approval actions for the current GuideVersion. */}
+        <div className="mt-4 border-t border-border pt-4">
+          <GuideWorkflowPanel guide={data} layout="inline" />
+        </div>
       </header>
 
       <section className="panel p-5">
         <h2 className="label-caps mb-2">Summary</h2>
         <p className="max-w-3xl text-sm leading-relaxed text-foreground/90">{data.summary}</p>
         <p className="mt-4 rounded-md border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-          Guide body content is not authored in Build 1. The editor, review actions and publishing
-          workflow arrive in later builds.
+          Review and approval run on the current GuideVersion. Publishing arrives in Build 2C —
+          Publishing and Version Lifecycle.
         </p>
       </section>
 
@@ -178,6 +179,8 @@ function GuideDetailPage() {
           </section>
 
           <VersionHistory guideId={data.id} currentVersionId={data.currentVersionId} />
+
+          <WorkflowHistory guideId={data.id} />
 
           <section className="panel">
             <div className="border-b border-border px-4 py-3">

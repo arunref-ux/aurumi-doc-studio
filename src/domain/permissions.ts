@@ -13,7 +13,7 @@
 export const GUIDE_PERMISSIONS = {
   create: "guide.create",
   edit: "guide.edit",
-  submitForReview: "guide.submit_for_review",
+  submitForReview: "guide.submit_review",
   review: "guide.review",
   approve: "guide.approve",
   requestChanges: "guide.request_changes",
@@ -173,7 +173,8 @@ export const GUIDE_ACTIONS: Record<GuideActionKey, GuideActionDefinition> = {
   "guide.action.request_changes": {
     key: "guide.action.request_changes",
     label: "Request Changes",
-    requires: [GUIDE_PERMISSIONS.requestChanges],
+    // Build 2B mapping: Request Changes is a reviewer capability.
+    requires: [GUIDE_PERMISSIONS.review, GUIDE_PERMISSIONS.requestChanges],
     availableInBuild: 2,
   },
   "guide.action.publish": {

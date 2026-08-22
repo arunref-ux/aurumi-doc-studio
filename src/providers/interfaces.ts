@@ -12,6 +12,7 @@ import type {
   GuideStatusCounts,
   GuideType,
   GuideVersion,
+  GuideVersionWorkflowEvent,
   GuideWithVersion,
   IntentRef,
   TopicRef,
@@ -92,6 +93,21 @@ export interface UpdateGuideDraftInput {
 
 
 /**
+ * Build 2B workflow transition contract. The provider resolves the target
+ * status through the centralized transition policy — callers never supply a
+ * status, so no generic `updateGuideVersion({ status })` path exists.
+ */
+export interface GuideWorkflowTransitionInput {
+  guideId: string;
+  /** Expected current GuideVersion id — guards against stale UI state. */
+  guideVersionId: string;
+  /** Display name of the acting user; authorization happens in the command bus. */
+  actor: string;
+  /** Optional minimal review note, stored on the workflow event only. */
+  note?: string;
+}
+
+/**
  * Guide Studio owns Guides, GuideVersions and GuideAssociations only.
  * It never enumerates external hierarchies.
  */
@@ -124,6 +140,16 @@ export interface GuideStudioProvider {
    * nothing. Does not accept guideType.
    */
   updateGuideDraft(input: UpdateGuideDraftInput): Promise<GuideWithVersion>;
+  /** Read-only version-level workflow history for a guide (newest first). */
+  getWorkflowEvents(guideId: string): Promise<GuideVersionWorkflowEvent[]>;
+  /**
+   * Build 2B lifecycle mutations. Each validates the transition against the
+   * centralized policy and commits the status change together with its
+   * workflow event as one atomic operation.
+   */
+  submitGuideVersionForReview(input: GuideWorkflowTransitionInput): Promise<GuideWithVersion>;
+  requestGuideVersionChanges(input: GuideWorkflowTransitionInput): Promise<GuideWithVersion>;
+  approveGuideVersion(input: GuideWorkflowTransitionInput): Promise<GuideWithVersion>;
 }
 
 

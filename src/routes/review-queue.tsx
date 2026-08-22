@@ -2,7 +2,6 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/studio/DataState";
-import { ActionButton } from "@/components/studio/PermissionGate";
 import { PageHeader } from "@/components/studio/PageHeader";
 import { StatusBadge } from "@/components/studio/StatusBadge";
 import {
@@ -43,14 +42,14 @@ function ReviewQueuePage() {
       <PageHeader
         eyebrow="Lifecycle"
         title="Review Queue"
-        description="Read-only status summary for Build 1. Review comments, approvals and publishing actions are added in a later build."
+        description="Guides awaiting review or approval. Workflow actions run on each guide's current version."
       />
 
       <div className="rounded-lg border border-dashed border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
           <Clock className="size-3.5" /> Coming later
         </span>{" "}
-        · Submit for review, reviewer assignment, comment threads, approval and publish actions.
+        · Reviewer assignment, comment threads and publishing (Build 2C).
       </div>
 
       <section>
@@ -79,7 +78,7 @@ function ReviewQueuePage() {
       <QueueSection title="In review" description="Awaiting reviewer sign-off." query={pending} />
       <QueueSection
         title="Approved, awaiting publish"
-        description="Content approved; publishing is not available in Build 1."
+        description="Content approved and read-only; publishing arrives in Build 2C."
         query={approved}
       />
     </div>
@@ -126,12 +125,13 @@ function QueueSection({
                 </p>
               </div>
               <StatusBadge status={guide.currentVersion.status} />
-              <div className="flex items-center gap-1.5">
-                <ActionButton action="guide.action.review" size="sm" variant="ghost" />
-                <ActionButton action="guide.action.approve" size="sm" variant="ghost" />
-                <ActionButton action="guide.action.request_changes" size="sm" variant="ghost" />
-                <ActionButton action="guide.action.publish" size="sm" variant="ghost" />
-              </div>
+              <Link
+                to="/library/$guideId"
+                params={{ guideId: guide.id }}
+                className="text-xs font-medium text-foreground hover:underline"
+              >
+                Open workflow →
+              </Link>
               <span className="w-40 text-right text-xs text-muted-foreground">
                 {formatDate(guide.updatedAt)} · {relativeDays(guide.updatedAt)}
               </span>

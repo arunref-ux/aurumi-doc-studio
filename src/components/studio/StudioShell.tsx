@@ -59,7 +59,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="border-t border-sidebar-border px-5 py-4 text-[0.6875rem] leading-relaxed text-sidebar-muted">
-          <p className="font-medium text-sidebar-foreground">Build 2A.2 · Prototype</p>
+          <p className="font-medium text-sidebar-foreground">Build 2B · Prototype</p>
           <p>
             Guide creation and rich content authoring are live. Review and publishing workflow
             arrives in Build 2B.
